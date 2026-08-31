@@ -94,10 +94,15 @@ CREATE TABLE IF NOT EXISTS version (
     license         TEXT
 );
 
+-- source_id is recorded per rendering, not inherited from `version`: the same
+-- version may be loaded from different sources (an aggregator vs. the upstream
+-- publisher), and aggregators can silently alter text. Provenance must name the
+-- bytes we actually parsed.
 CREATE TABLE IF NOT EXISTS rendering (
     verse_id   INTEGER NOT NULL REFERENCES verse(id),
     version_id TEXT NOT NULL REFERENCES version(id),
     text       TEXT NOT NULL,
+    source_id  TEXT NOT NULL REFERENCES source(id),
     PRIMARY KEY (verse_id, version_id)
 );
 

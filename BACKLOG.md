@@ -47,15 +47,23 @@ recorded here rather than dropped, so the trade-off stays visible.
 
 ## Engineering
 
-- [ ] **Ingestion parsers.** `fetch_sources.py` retrieves and logs provenance; parsers to
-      load OSIS XML, MorphGNT TSV and the lexicon XML into `token`/`lemma`/`sense` are
-      not written yet. This is the next real milestone.
-- [ ] **Enumerate multi-file sources.** OSHB and MorphGNT are one file per book;
-      `downloads.json` currently lists a single sample file each. Enumerate the full set.
+- [x] **Ingestion parsers.** `scripts/ingest.py` loads Strong's (lemmas + senses), OSHB
+      (Hebrew tokens) and MorphGNT (Greek tokens). 306,785 Hebrew and 137,554 Greek
+      tokens; 98.5% of Greek tokens link to a Strong's entry.
+- [ ] **Close the remaining 1.5% Greek linkage gap.** MorphGNT carries no Strong's
+      numbers, so linkage is by diacritic-folded lemma text. ~2,100 tokens and 489
+      lemmas remain unlinked. STEPBible TAGNT has explicit Strong's tags and would
+      replace the heuristic entirely — the better fix.
+- [ ] **Load the English translations.** The `version`/`rendering`/`gloss` tables exist
+      and are empty; nothing shows English text yet. Needed before the drift view.
+- [ ] **BDB senses.** BrownDriverBriggs.xml is fetched but not parsed; currently the
+      only Hebrew senses are Strong's, which is thin and dated for real study.
+- [x] **Enumerate multi-file sources.** `downloads.json` now lists all 71 files
+      (39 OSHB books, 27 MorphGNT books, 5 lexicon files).
 - [ ] **Re-fetch and diff.** `fetch_log` records sha256 per retrieval; add a command that
       re-fetches and reports what changed upstream.
-- [ ] **Tests.** Canon integrity (66 books / 1189 chapters) is currently asserted ad hoc;
-      make it a real test, alongside reference-parser cases.
+- [x] **Tests.** 23 Python tests and 17 reference-parser tests, run by CI on every push
+      and pull request.
 - [ ] **Consider Postgres.** SQLite is right for now. Full-corpus concordance queries
       across every version may outgrow it.
 

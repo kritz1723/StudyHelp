@@ -1,0 +1,77 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  test:
+    name: Build database and run tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Byte-compile scripts
+        run: python3 -m compileall -q scripts tests
+
+      - name: Build database from schema and registry
+        run: python3 scripts/init_db.py
+
+      - name: Run Python tests
+        # Tests needing fetched corpora skip automatically, so this job stays
+        # fast and does not depend on upstream dataset availability.
+        run: python3 -m unittest discover tests -v
+
+      - name: Run reference-parser tests
+        run: node tests/books.test.js
+
+  ingest:
+    name: Fetch corpora and verify ingestion
+    runs-on: ubuntu-latest
+    # Hits third-party hosts, so it must not gate the main test job: an upstream
+    # outage is not a defect in this repo.
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Build database
+        run: python3 scripts/init_db.py
+
+      - name: Fetch registered datasets
+        run: python3 scripts/fetch_sources.py --all
+
+      - name: Ingest
+        run: python3 scripts/ingest.py --all
+
+      - name: Verify against known counts
+        run: python3 -m unittest discover tests -v
+
+      - name: Report provenance
+        if: always()
+        run: |
+          python3 - <<'PY'
+          import sqlite3
+          conn = sqlite3.connect("data/studyhelp.db")
+          ok, failed = conn.execute(
+              "SELECT SUM(ok), SUM(1 - ok) FROM fetch_log"
+          ).fetchone()
+          print(f"fetch_log: {ok or 0} ok, {failed or 0} failed")
+          for row in conn.execute(
+              "SELECT source_id, url, http_status, error FROM fetch_log WHERE ok = 0"
+          ):
+              print("  FAILED", row)
+          PY
