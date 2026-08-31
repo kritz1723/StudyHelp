@@ -125,3 +125,32 @@ Corpora are fetched on demand into `data/raw/` (gitignored) rather than committe
 Committing multi-megabyte corpora would bloat the repo and, for share-alike and
 EULA-bound sources, redistribute them under terms we have not confirmed. The registry
 plus the checksummed fetch log reproduces any dataset without either problem.
+
+
+## Reconciliation with the ideation whiteboard
+
+The board confirmed the lemma-centred spine and added one thing this design had
+underweighted: a word study should follow the word **down the transmission chain**,
+showing the count and form at each layer, rather than treating each corpus separately.
+
+```
+Hebrew OT  ->  Septuagint (Alexandria, c. 200 BC, Greek)  ->  Greek NT  ->  English
+```
+
+The worked example on the board was PROPITIATION: an English word, reached through
+Greek (hilasmos / hilasterion), which the LXX had already used to render Hebrew
+sacrificial vocabulary (kipper / kapporeth). The meaning did not arrive in English
+directly from Hebrew -- it travelled, and each stage left a mark.
+
+Consequences for the build:
+
+- **The LXX is the hinge, not a nice-to-have.** It is the only witness to how Hebrew
+  vocabulary was being rendered into Greek before the NT was written, so without it
+  the chain is broken exactly in the middle. Ingesting it is now the critical path.
+- **Per-layer counts are a first-class view.** For a word, show occurrences in the
+  Hebrew, in the LXX, in the Greek NT and in each English version -- the shape of
+  those four numbers is itself the finding.
+- **The board distinguishes PRIMARY sources from the rest.** The registry should mark
+  which sources are primary witnesses (tagged original-language texts, manuscripts)
+  and which are derivative (translations, aggregators), because the distinction
+  changes how much weight a claim carries.

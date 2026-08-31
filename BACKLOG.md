@@ -54,8 +54,19 @@ recorded here rather than dropped, so the trade-off stays visible.
       numbers, so linkage is by diacritic-folded lemma text. ~2,100 tokens and 489
       lemmas remain unlinked. STEPBible TAGNT has explicit Strong's tags and would
       replace the heuristic entirely — the better fix.
-- [ ] **Load the English translations.** The `version`/`rendering`/`gloss` tables exist
-      and are empty; nothing shows English text yet. Needed before the drift view.
+- [x] **Load the English translations.** Nine editions loaded, 280,600 renderings,
+      Wycliffe (1395) through the Berean Standard Bible (2023). KJV verse count checked
+      against the known 31,102.
+- [ ] **Ingest the Septuagint — now the critical path.** The whiteboard's transmission
+      chain (Hebrew → LXX → Greek NT → English) is broken in the middle without it.
+      Registered but not loaded.
+- [ ] **Per-layer occurrence counts.** Show a word's count in Hebrew, LXX, Greek NT and
+      each English version side by side, as sketched on the board.
+- [ ] **Mark primary vs derivative sources** in the registry. A tagged original-language
+      text and an aggregated translation should not carry equal weight.
+- [ ] **The `gloss` table is still empty.** Word-level alignment between a translation
+      and the original token is what turns "translations loaded" into a real drift view;
+      unfoldingWord's aligned texts are the likely route.
 - [ ] **BDB senses.** BrownDriverBriggs.xml is fetched but not parsed; currently the
       only Hebrew senses are Strong's, which is thin and dated for real study.
 - [x] **Enumerate multi-file sources.** `downloads.json` now lists all 71 files
@@ -76,6 +87,26 @@ recorded here rather than dropped, so the trade-off stays visible.
 - [ ] **Index size.** `index.json` is 2.1 MB and every visitor downloads it. Fine now;
       shard or move to a prefix-indexed search once English translations land.
 - [ ] **14,686 small files.** Works on Pages, but a keyed bundle would deploy faster.
+
+## Regional and language coverage
+
+- [x] **Translation is optional.** A reader can choose "original only", and the choice
+      is remembered.
+- [ ] **Deuterocanonical books.** Wycliffe and the Vulgate ship Tobit, Judith, Sirach,
+      Baruch, Maccabees and others; ingestion drops them because the canon table holds
+      only the 66-book Protestant canon. This silently excludes Catholic and Orthodox
+      readers and should be fixed by making the canon itself configurable.
+- [ ] **Right-to-left rendering.** Hebrew is already on screen; proper bidi handling is
+      needed before any Arabic, Persian or Urdu translation is added.
+- [ ] **Indic and CJK scripts.** Line height, shaping and font fallbacks will need work
+      before Hindi, Tamil, Telugu, Bengali or Chinese translations render acceptably.
+- [ ] **Non-English open translations.** Coverage is uneven by language; the UI should
+      show honestly what exists per language rather than implying parity.
+- [ ] **Interface language separate from translation language.** A reader may want a
+      Tamil translation with an English interface, or the reverse.
+- [ ] **Versification schemes.** Hebrew, LXX, Vulgate and English numbering diverge, and
+      Orthodox and Catholic canons differ in book count. The `versification` column
+      exists; the mapping tables do not.
 
 ## Product
 

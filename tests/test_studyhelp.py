@@ -128,6 +128,32 @@ class SchemaTests(unittest.TestCase):
         conn.close()
 
 
+class CompositionDateTests(unittest.TestCase):
+    def setUp(self):
+        self.doc = json.loads((ROOT / "data" / "composition_dates.json").read_text())
+
+    def test_every_canon_book_is_dated(self):
+        canon = {b["name"] for b in json.loads((ROOT / "data" / "canon.json").read_text())["books"]}
+        dated = {e["book"] for e in self.doc["books"]}
+        self.assertEqual(canon, dated)
+
+    def test_ranges_are_ordered_and_never_points_only(self):
+        for entry in self.doc["books"]:
+            for tradition in ("traditional", "critical"):
+                span = entry[tradition]
+                self.assertLessEqual(
+                    span["earliest"], span["latest"],
+                    f"{entry['book']} {tradition} range runs backwards",
+                )
+
+    def test_traditions_are_documented(self):
+        # A dating scheme without a stated position is exactly the hidden
+        # editorial judgement this app is meant to avoid.
+        for key, meta in self.doc["traditions"].items():
+            self.assertTrue(meta.get("label"))
+            self.assertTrue(meta.get("description"))
+
+
 class GreekNormalisationTests(unittest.TestCase):
     def test_diacritics_are_folded(self):
         # This fold is what links MorphGNT lemmas to Strong's entries, which
@@ -211,6 +237,44 @@ class IngestedCorpusTests(unittest.TestCase):
         if not count:
             self.skipTest("morphgnt not ingested")
         self.assertTrue(135_000 <= count <= 140_000, count)
+
+    def test_composition_dates_loaded_for_every_book(self):
+        rows = self.conn.execute(
+            "SELECT COUNT(DISTINCT book_id) FROM composition_date"
+        ).fetchone()[0]
+        self.assertEqual(rows, 66)
+
+    def test_kjv_verse_count(self):
+        count = self.conn.execute(
+            "SELECT COUNT(*) FROM rendering WHERE version_id = 'kjv'"
+        ).fetchone()[0]
+        if not count:
+            self.skipTest("translations not ingested")
+        # The KJV has 31,102 verses. Book-name mismatches during ingest show up
+        # here as a shortfall rather than as silently missing books.
+        self.assertEqual(count, 31_102)
+
+    def test_translations_span_eras(self):
+        years = [
+            r[0] for r in self.conn.execute(
+                "SELECT year FROM version WHERE year IS NOT NULL ORDER BY year"
+            )
+        ]
+        if not years:
+            self.skipTest("translations not ingested")
+        self.assertLess(years[0], 1600, "no pre-1600 translation loaded")
+        self.assertGreater(years[-1], 1900, "no modern translation loaded")
+
+    def test_rendering_names_the_bytes_it_came_from(self):
+        # version.source_id names the upstream edition; rendering.source_id names
+        # where the bytes were actually parsed from. They are meant to differ.
+        row = self.conn.execute(
+            "SELECT r.source_id, v.source_id FROM rendering r "
+            "JOIN version v ON v.id = r.version_id LIMIT 1"
+        ).fetchone()
+        if not row:
+            self.skipTest("translations not ingested")
+        self.assertNotEqual(row[0], row[1])
 
     def test_every_token_traces_to_a_registered_source(self):
         orphans = self.conn.execute(

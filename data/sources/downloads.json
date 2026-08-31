@@ -312,6 +312,96 @@
       "source_id": "stepbible-data",
       "note": "Large TSV releases; prefer a tagged release over master. Confirm current filenames before bulk fetch.",
       "files": []
+    },
+    {
+      "source_id": "wycliffe-1395",
+      "note": "Retrieved via the scrollmapper aggregator; the upstream edition is the authority for the text.",
+      "files": [
+        {
+          "url": "https://raw.githubusercontent.com/scrollmapper/bible_databases/master/formats/json/Wycliffe.json",
+          "path": "translations/Wycliffe.json"
+        }
+      ]
+    },
+    {
+      "source_id": "tyndale-1526",
+      "note": "Retrieved via the scrollmapper aggregator; the upstream edition is the authority for the text.",
+      "files": [
+        {
+          "url": "https://raw.githubusercontent.com/scrollmapper/bible_databases/master/formats/json/Tyndale.json",
+          "path": "translations/Tyndale.json"
+        }
+      ]
+    },
+    {
+      "source_id": "kjv-1769",
+      "note": "Retrieved via the scrollmapper aggregator; the upstream edition is the authority for the text.",
+      "files": [
+        {
+          "url": "https://raw.githubusercontent.com/scrollmapper/bible_databases/master/formats/json/KJV.json",
+          "path": "translations/KJV.json"
+        }
+      ]
+    },
+    {
+      "source_id": "ylt-1898",
+      "note": "Retrieved via the scrollmapper aggregator; the upstream edition is the authority for the text.",
+      "files": [
+        {
+          "url": "https://raw.githubusercontent.com/scrollmapper/bible_databases/master/formats/json/YLT.json",
+          "path": "translations/YLT.json"
+        }
+      ]
+    },
+    {
+      "source_id": "asv-1901",
+      "note": "Retrieved via the scrollmapper aggregator; the upstream edition is the authority for the text.",
+      "files": [
+        {
+          "url": "https://raw.githubusercontent.com/scrollmapper/bible_databases/master/formats/json/ASV.json",
+          "path": "translations/ASV.json"
+        }
+      ]
+    },
+    {
+      "source_id": "bsb",
+      "note": "Retrieved via the scrollmapper aggregator; the upstream edition is the authority for the text.",
+      "files": [
+        {
+          "url": "https://raw.githubusercontent.com/scrollmapper/bible_databases/master/formats/json/BSB.json",
+          "path": "translations/BSB.json"
+        }
+      ]
+    },
+    {
+      "source_id": "clementine-vulgate",
+      "note": "Retrieved via the scrollmapper aggregator; the upstream edition is the authority for the text.",
+      "files": [
+        {
+          "url": "https://raw.githubusercontent.com/scrollmapper/bible_databases/master/formats/json/Vulgate.json",
+          "path": "translations/Vulgate.json"
+        }
+      ]
+    },
+    {
+      "source_id": "akjv",
+      "note": "Retrieved via the scrollmapper aggregator; the upstream edition is the authority for the text.",
+      "files": [
+        {
+          "url": "https://raw.githubusercontent.com/scrollmapper/bible_databases/master/formats/json/AKJV.json",
+          "path": "translations/AKJV.json"
+        }
+      ]
+    },
+    {
+      "source_id": "nheb",
+      "note": "Retrieved via the scrollmapper aggregator; the upstream edition is the authority for the text.",
+      "files": [
+        {
+          "url": "https://raw.githubusercontent.com/scrollmapper/bible_databases/master/formats/json/NHEB.json",
+          "path": "translations/NHEB.json"
+        }
+      ]
     }
   ]
 }

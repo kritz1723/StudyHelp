@@ -244,10 +244,101 @@ class Ingestor:
         print(f"  morphgnt: {tokens} tokens, {matched} linked to Strong's ({rate:.1f}%)")
 
 
+    def ingest_translations(self):
+        """Load English (and Latin) translations from the scrollmapper JSON packaging.
+
+        version.source_id names the upstream EDITION, which is the authority for
+        the text; rendering.source_id names the aggregator the bytes actually came
+        from. Aggregators can silently alter text, so the two are kept distinct.
+        """
+        aggregator = "scrollmapper-bible-databases"
+        editions = {
+            "Wycliffe.json": ("wycliffe-1395", "wycliffe", "Wycliffe Bible", "en", 1395,
+                              "middle_english", "Latin Vulgate"),
+            "Tyndale.json": ("tyndale-1526", "tyndale", "Tyndale Bible", "en", 1526,
+                             "early_modern", "Greek and Hebrew"),
+            "KJV.json": ("kjv-1769", "kjv", "King James Version", "en", 1769,
+                         "early_modern", "Textus Receptus and Masoretic Text"),
+            "YLT.json": ("ylt-1898", "ylt", "Young's Literal Translation", "en", 1898,
+                         "modern_early", "Textus Receptus and Masoretic Text"),
+            "ASV.json": ("asv-1901", "asv", "American Standard Version", "en", 1901,
+                         "modern_early", "Critical text and Masoretic Text"),
+            "BSB.json": ("bsb", "bsb", "Berean Standard Bible", "en", 2023,
+                         "contemporary", "Critical text and Masoretic Text"),
+            "Vulgate.json": ("clementine-vulgate", "vulgate", "Clementine Vulgate", "la", 1592,
+                             "early_modern", "Hebrew and Greek"),
+            "AKJV.json": ("akjv", "akjv", "American King James Version", "en", 1999,
+                          "contemporary", "Textus Receptus and Masoretic Text"),
+            "NHEB.json": ("nheb", "nheb", "New Heart English Bible", "en", None,
+                          "contemporary", "Critical text and Masoretic Text"),
+        }
+
+        books = {name: bid for bid, name in self.conn.execute("SELECT id, name FROM book")}
+        # Packaged files use a few name spellings that differ from our canon.
+        aliases = {
+            "Psalm": "Psalms", "Song of Songs": "Song of Solomon",
+            "Canticles": "Song of Solomon", "Revelation of John": "Revelation",
+            "The Revelation": "Revelation", "Acts of the Apostles": "Acts",
+        }
+        # Numbered books are packaged with Roman numerals ("I Corinthians").
+        romans = {"I": "1", "II": "2", "III": "3"}
+
+        def canon_name(raw):
+            name = aliases.get(raw, raw)
+            head, _, tail = name.partition(" ")
+            if head in romans and tail:
+                name = f"{romans[head]} {tail}"
+            return aliases.get(name, name)
+
+        loaded = 0
+        for filename, meta in editions.items():
+            path = RAW / "translations" / filename
+            if not path.exists():
+                continue
+            source_id, version_id, name, language, year, era, translated_from = meta
+
+            with open(path, encoding="utf-8") as fh:
+                doc = json.load(fh)
+
+            self.conn.execute(
+                "INSERT INTO version (id, source_id, name, language, year, era, translated_from) "
+                "VALUES (?, ?, ?, ?, ?, ?, ?) ON CONFLICT(id) DO UPDATE SET "
+                "name=excluded.name, year=excluded.year, era=excluded.era, "
+                "translated_from=excluded.translated_from",
+                (version_id, source_id, name, language, year, era, translated_from),
+            )
+
+            rows = []
+            skipped = set()
+            for book in doc.get("books", []):
+                book_id = books.get(canon_name(book["name"]))
+                if book_id is None:
+                    skipped.add(book["name"])
+                    continue
+                for chapter in book.get("chapters", []):
+                    ch = chapter["chapter"]
+                    for verse in chapter.get("verses", []):
+                        vid = self.verse_id(book_id, ch, verse["verse"])
+                        rows.append((vid, version_id, verse["text"].strip(), aggregator))
+
+            self.conn.executemany(
+                "INSERT INTO rendering (verse_id, version_id, text, source_id) "
+                "VALUES (?, ?, ?, ?) ON CONFLICT (verse_id, version_id) DO UPDATE SET "
+                "text=excluded.text, source_id=excluded.source_id",
+                rows,
+            )
+            loaded += len(rows)
+            note = f", skipped {sorted(skipped)}" if skipped else ""
+            print(f"  {version_id}: {len(rows)} verses{note}")
+
+        print(f"  translations: {loaded} renderings")
+
+
 DATASETS = {
     "strongs": "ingest_strongs",
     "oshb": "ingest_oshb",
     "morphgnt": "ingest_morphgnt",
+    "translations": "ingest_translations",
 }
 
 
@@ -261,7 +352,7 @@ def main():
     if not args.dataset and not args.all:
         parser.error("pass --dataset <name> or --all")
 
-    order = ["strongs", "oshb", "morphgnt"] if args.all else [args.dataset]
+    order = ["strongs", "oshb", "morphgnt", "translations"] if args.all else [args.dataset]
 
     conn = sqlite3.connect(args.db)
     conn.execute("PRAGMA foreign_keys = ON")

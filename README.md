@@ -80,13 +80,27 @@ Fetched corpora and the generated database are gitignored — the *registry* and
 | --- | --- |
 | Hebrew tokens (OSHB / WLC) | 306,785 |
 | Greek tokens (MorphGNT / SBLGNT) | 137,554 |
-| Lemmas with Strong's entries | 14,197 |
+| Translated verses | 280,600 across 9 editions |
+| Lemmas | 14,686 |
 | Attested senses | 28,367 |
+| Composition-date ranges | 132 (66 books × 2 traditions) |
 | Greek tokens linked to Strong's | 98.5% |
+
+Translations span Wycliffe (1395), Tyndale (1526), the KJV (1769), Young's Literal
+(1898), the ASV (1901), the Clementine Vulgate, and the Berean Standard Bible (2023).
 
 Spot-checked against independently known counts: *elohim* (H430) 2,600 occurrences
 first at Genesis 1:1; *agape* (G26) 116 occurrences first at Matthew 24:12, clustering
 in 1 John. These are asserted in the test suite so parser regressions surface fast.
+
+## Dating
+
+A word's first appearance is given a year as well as a reference — but as a **range, per
+scholarly tradition**, never as a single number. When a biblical book was written is
+genuinely contested, and a lone year would smuggle one school's position into an app
+whose whole premise is not doing that. Both a traditional and a critical range are shown
+side by side, and results can still be sorted by date: the declared rule is to order by
+the earliest bound of the selected tradition, stated in the interface rather than hidden.
 
 ## Deployment
 
