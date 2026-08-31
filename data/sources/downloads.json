@@ -416,6 +416,15 @@
           "path": "lxx/01-Swete_word_with_punctuations.csv"
         }
       ]
+    },
+    {
+      "source_id": "macula-greek",
+      "files": [
+        {
+          "url": "https://raw.githubusercontent.com/Clear-Bible/macula-greek/main/SBLGNT/tsv/macula-greek-SBLGNT.tsv",
+          "path": "macula/macula-greek-SBLGNT.tsv"
+        }
+      ]
     }
   ]
 }

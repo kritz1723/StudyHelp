@@ -54,10 +54,9 @@ recorded here rather than dropped, so the trade-off stays visible.
 - [x] **Ingestion parsers.** `scripts/ingest.py` loads Strong's (lemmas + senses), OSHB
       (Hebrew tokens) and MorphGNT (Greek tokens). 306,785 Hebrew and 137,554 Greek
       tokens; 98.5% of Greek tokens link to a Strong's entry.
-- [ ] **Close the remaining 1.5% Greek linkage gap.** MorphGNT carries no Strong's
-      numbers, so linkage is by diacritic-folded lemma text. ~2,100 tokens and 489
-      lemmas remain unlinked. STEPBible TAGNT has explicit Strong's tags and would
-      replace the heuristic entirely — the better fix.
+- [x] **Close the Greek linkage gap.** MACULA Greek (CC BY 4.0) carries an explicit
+      Strong's number for every word, replacing the diacritic-folding heuristic. Five
+      tokens out of 137,554 remain unlinked, down from about 2,100.
 - [x] **Load the English translations.** Nine editions loaded, 280,600 renderings,
       Wycliffe (1395) through the Berean Standard Bible (2023). KJV verse count checked
       against the known 31,102.
@@ -82,9 +81,21 @@ recorded here rather than dropped, so the trade-off stays visible.
       each English version side by side, as sketched on the board.
 - [ ] **Mark primary vs derivative sources** in the registry. A tagged original-language
       text and an aggregated translation should not carry equal weight.
-- [ ] **The `gloss` table is still empty.** Word-level alignment between a translation
-      and the original token is what turns "translations loaded" into a real drift view;
-      unfoldingWord's aligned texts are the likely route.
+- [x] **The `gloss` table is populated.** 386,092 per-word glosses from MACULA, in
+      English (Berean Interlinear and Cherith) and Mandarin (Cherith). A word's page now
+      shows what it actually became, and how often.
+- [ ] **Extend alignment to the full translations.** Glosses currently cover the Greek
+      New Testament only. The Hebrew side needs MACULA Hebrew, and the historical English
+      versions (Wycliffe, Tyndale, KJV) have no word-level alignment at all — so the drift
+      view cannot yet run across centuries, only across present-day glosses.
+- [ ] **Louw-Nida semantic domains.** MACULA carries the domain codes, which would be a
+      second, independent sense authority and the first chance to show lexicons
+      disagreeing. Two obstacles: the codes need the Louw-Nida domain labels to be
+      readable, and the sense data inside MACULA comes from UBS MARBLE marked "used with
+      permission" rather than CC BY, so its redistribution needs checking first.
+- [ ] **unfoldingWord is unreachable from this environment.** git.door43.org is blocked
+      by the network policy and the repositories are not mirrored on GitHub, so the
+      aligned ULT/UST could not be evaluated.
 - [ ] **BDB senses.** BrownDriverBriggs.xml is fetched but not parsed; currently the
       only Hebrew senses are Strong's, which is thin and dated for real study.
 - [x] **Enumerate multi-file sources.** `downloads.json` now lists all 71 files

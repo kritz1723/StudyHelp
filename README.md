@@ -85,7 +85,8 @@ Fetched corpora and the generated database are gitignored — the *registry* and
 | Lemmas | 14,686 |
 | Attested senses | 28,367 |
 | Composition-date ranges | 132 (66 books × 2 traditions) |
-| Greek tokens linked to Strong's | 98.5% |
+| Per-word glosses | 386,092 (English and Mandarin) |
+| Greek tokens with explicit Strong's | 99.996% |
 
 Translations span Wycliffe (1395), Tyndale (1526), the KJV (1769), Young's Literal
 (1898), the ASV (1901), the Clementine Vulgate, and the Berean Standard Bible (2023).
@@ -93,6 +94,21 @@ Translations span Wycliffe (1395), Tyndale (1526), the KJV (1769), Young's Liter
 Spot-checked against independently known counts: *elohim* (H430) 2,600 occurrences
 first at Genesis 1:1; *agape* (G26) 116 occurrences first at Matthew 24:12, clustering
 in 1 John. These are asserted in the test suite so parser regressions surface fast.
+
+## What a word became
+
+Every Greek word carries per-word glosses, so a word's page shows not just what it meant
+but what translators actually chose for it, and how often. For *agape*:
+
+| | |
+| --- | --- |
+| English | love ×114, love feasts ×1, beloved ×1 |
+| Mandarin | 爱 ×65, 爱心 ×41, 慈爱 ×4, 相爱 ×3, 仁爱 ×2, 爱筵 ×1 |
+
+The shape of those two rows is itself the finding: English collapses the word into one
+choice 98% of the time, while Mandarin spreads it across six. A reader working only in
+English would never see that the concentration is a property of the translation rather
+than of the word.
 
 ## Canon
 

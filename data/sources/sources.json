@@ -396,6 +396,53 @@
       "priority": "high",
       "verified": "2026-08-31",
       "notes": "The lemmas are openly licensed, but they are keyed to the CCAT text, which is not. Openly licensed keys into a closed text do not by themselves unlock lemma-level LXX bridging."
+    },
+    {
+      "id": "macula-greek",
+      "name": "MACULA Greek Linguistic Datasets",
+      "kind": "original_text_tagged",
+      "language": "grc",
+      "description": "Word-level annotation of the Greek New Testament: explicit Strong's numbers, morphology, Louw-Nida semantic domains, and per-word English and Mandarin glosses.",
+      "license": "CC-BY-4.0",
+      "attribution": "MACULA Greek Linguistic Datasets, available at https://github.com/Clear-Bible/macula-greek/ © Biblica, Inc.",
+      "repository": "https://github.com/Clear-Bible/macula-greek",
+      "formats": [
+        "TSV",
+        "XML"
+      ],
+      "tier": 1,
+      "priority": "critical",
+      "verified": "2026-08-31",
+      "notes": "Carries explicit Strong's numbers for every word, replacing the diacritic-folding heuristic previously used to link Greek tokens. Note one nuance recorded rather than glossed over: the Louw-Nida word-sense data within MACULA comes from the UBS MARBLE project and is marked 'used with permission' rather than CC BY, so it is not treated as freely redistributable here."
+    },
+    {
+      "id": "berean-interlinear",
+      "name": "Berean Interlinear Bible",
+      "kind": "translation",
+      "language": "en",
+      "year": 2023,
+      "era": "contemporary",
+      "description": "Word-by-word English glosses of the Greek New Testament.",
+      "license": "Public domain (dedicated 2023-04-30)",
+      "tier": 1,
+      "priority": "high",
+      "verified": "2026-08-31",
+      "notes": "Reaches us inside MACULA; the gloss column is the Berean Interlinear's."
+    },
+    {
+      "id": "cherith-glosses",
+      "name": "Cherith Glosses for the Greek New Testament",
+      "kind": "translation",
+      "language": "en,zh",
+      "year": 2023,
+      "era": "contemporary",
+      "description": "Per-word English and Mandarin glosses of the Greek New Testament.",
+      "license": "CC-BY-4.0",
+      "attribution": "Andi Wu, Cherith Analytics",
+      "tier": 1,
+      "priority": "high",
+      "verified": "2026-08-31",
+      "notes": "The Mandarin glosses are the project's first non-European-language data."
     }
   ]
 }

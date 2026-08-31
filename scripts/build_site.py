@@ -91,6 +91,17 @@ def build(conn, out_dir):
         )
     ]
 
+    # How each word has actually been rendered, per gloss source. This is the
+    # translation-drift view in miniature: one original word, the spread of words
+    # it became, and how often each was chosen.
+    renderings_by_lemma = {}
+    for lemma_id, version_id, text, count in conn.execute(
+        "SELECT t.lemma_id, g.version_id, g.text, COUNT(*) c FROM gloss g "
+        "JOIN token t ON t.id = g.token_id WHERE t.lemma_id IS NOT NULL "
+        "GROUP BY t.lemma_id, g.version_id, g.text ORDER BY t.lemma_id, g.version_id, c DESC"
+    ):
+        renderings_by_lemma.setdefault(lemma_id, {}).setdefault(version_id, []).append([text, count])
+
     senses = {}
     for lemma_id, gloss, definition, source_id, attested in conn.execute(
         "SELECT lemma_id, gloss, definition, source_id, attested FROM sense ORDER BY lemma_id, ordering, id"
@@ -144,6 +155,10 @@ def build(conn, out_dir):
             "first": first,
             "distribution": sorted(distribution.get(lemma_id, []), key=lambda r: -r[1]),
             "senses": senses.get(lemma_id, []),
+            "renderings": {
+                version: entries[:12]
+                for version, entries in renderings_by_lemma.get(lemma_id, {}).items()
+            },
         }
         (lemma_dir / f"{slug}.json").write_text(
             json.dumps(detail, ensure_ascii=False, separators=(",", ":")), encoding="utf-8"
@@ -204,6 +219,7 @@ def build(conn, out_dir):
         "renderings": conn.execute("SELECT COUNT(*) FROM rendering").fetchone()[0],
         "versions": len(versions),
         "canons": {name: len(books) for name, books in canons.items()},
+        "glosses": conn.execute("SELECT COUNT(*) FROM gloss").fetchone()[0],
     }
     (out_dir / "stats.json").write_text(json.dumps(stats), encoding="utf-8")
 

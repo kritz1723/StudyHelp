@@ -15,6 +15,7 @@ entry recording the exact bytes it was parsed from.
 """
 
 import argparse
+import csv
 import json
 import re
 import sqlite3
@@ -44,6 +45,18 @@ def normalize_greek(text):
     decomposed = unicodedata.normalize("NFD", text)
     stripped = "".join(c for c in decomposed if not unicodedata.combining(c))
     return stripped.lower().replace("ς", "σ").strip()
+
+
+def word_key(text):
+    """Comparison key for matching the same word across editions.
+
+    MorphGNT keeps punctuation attached to the word ("Ἀβραάμ."), MACULA strips it
+    ("Ἀβραάμ"), so a literal comparison rejects most real matches. Folding away
+    everything that is not a letter, on top of the diacritic fold, compares the
+    word itself.
+    """
+    folded = normalize_greek(text)
+    return "".join(c for c in folded if c.isalpha())
 
 
 def strongs_json(path):
@@ -444,12 +457,133 @@ class Ingestor:
               f"{f', skipped {len(skipped)} non-canonical books' if skipped else ''}")
 
 
+    def ingest_macula(self):
+        """Enrich the Greek New Testament with MACULA's word-level annotation.
+
+        Two things this fixes:
+
+        1. MorphGNT carries no Strong's numbers, so Greek tokens were linked to
+           lexicon entries by folding diacritics off the lemma -- a heuristic that
+           reached 98.5%. MACULA carries an explicit Strong's number for every
+           word, so the guesswork is replaced with the real tag.
+        2. The gloss table was empty. MACULA supplies per-word English and
+           Mandarin glosses, which is what a translation-drift view is built on,
+           and the Mandarin is this project's first non-European-language data.
+
+        Rows are applied only where the word actually matches the token already
+        loaded, so a versification or word-order difference between editions
+        cannot silently overwrite the wrong word.
+        """
+        source_id = "macula-greek"
+        path = RAW / "macula" / "macula-greek-SBLGNT.tsv"
+        if not path.exists():
+            print("  missing MACULA file -- run fetch_sources.py first")
+            return
+
+        codes = {
+            "MAT": 40, "MRK": 41, "LUK": 42, "JHN": 43, "ACT": 44, "ROM": 45,
+            "1CO": 46, "2CO": 47, "GAL": 48, "EPH": 49, "PHP": 50, "COL": 51,
+            "1TH": 52, "2TH": 53, "1TI": 54, "2TI": 55, "TIT": 56, "PHM": 57,
+            "HEB": 58, "JAS": 59, "1PE": 60, "2PE": 61, "1JN": 62, "2JN": 63,
+            "3JN": 64, "JUD": 65, "REV": 66,
+        }
+
+        # The gloss columns come from three different works, so they are recorded
+        # as three sources rather than merged into one anonymous "English".
+        gloss_versions = [
+            ("gloss", "berean-interlinear", "berean-interlinear",
+             "Berean Interlinear Bible", "en"),
+            ("english", "cherith-en", "cherith-glosses",
+             "Cherith Glosses (English)", "en"),
+            ("mandarin", "cherith-zh", "cherith-glosses",
+             "Cherith Glosses (Mandarin)", "zh"),
+        ]
+        for _, version_id, gloss_source, name, language in gloss_versions:
+            self.conn.execute(
+                "INSERT INTO version (id, source_id, name, language, year, era, translated_from) "
+                "VALUES (?, ?, ?, ?, 2023, 'contemporary', 'Greek') "
+                "ON CONFLICT(id) DO UPDATE SET name=excluded.name",
+                (version_id, gloss_source, name, language),
+            )
+
+        tokens = {}
+        for token_id, book_id, chapter, verse, position, surface in self.conn.execute(
+            "SELECT t.id, v.book_id, v.chapter, v.verse, t.position, t.surface FROM token t "
+            "JOIN verse v ON v.id = t.verse_id WHERE t.source_id = 'morphgnt-sblgnt'"
+        ):
+            tokens[(book_id, chapter, verse, position)] = (token_id, surface)
+
+        greek_lemma = {}
+        for lemma_id, strongs in self.conn.execute(
+            "SELECT id, strongs FROM lemma WHERE language='grc' AND strongs IS NOT NULL"
+        ):
+            greek_lemma[strongs] = lemma_id
+
+        matched = missed = relinked = 0
+        gloss_rows = []
+        with open(path, encoding="utf-8") as fh:
+            reader = csv.DictReader(fh, delimiter="\t")
+            for row in reader:
+                ref = row.get("ref") or ""
+                head, _, index = ref.partition("!")
+                code, _, coords = head.partition(" ")
+                chapter_text, _, verse_text = coords.partition(":")
+                book_id = codes.get(code)
+                if not (book_id and index.isdigit()
+                        and chapter_text.isdigit() and verse_text.isdigit()):
+                    continue
+
+                key = (book_id, int(chapter_text), int(verse_text), int(index))
+                entry = tokens.get(key)
+                if not entry:
+                    missed += 1
+                    continue
+
+                token_id, surface = entry
+                # Guard: only trust the row if it describes the same word.
+                if word_key(surface) != word_key(row.get("text") or ""):
+                    missed += 1
+                    continue
+                matched += 1
+
+                strongs = (row.get("strong") or "").strip()
+                if strongs.isdigit():
+                    key_strongs = f"G{int(strongs)}"
+                    lemma_id = greek_lemma.get(key_strongs)
+                    if lemma_id is None:
+                        lemma_id = self.lemma_id(
+                            row.get("lemma") or key_strongs, "grc", key_strongs, source_id
+                        )
+                        greek_lemma[key_strongs] = lemma_id
+                    self.conn.execute(
+                        "UPDATE token SET lemma_id = ? WHERE id = ?", (lemma_id, token_id)
+                    )
+                    relinked += 1
+
+                for column, version_id, gloss_source, _, _ in gloss_versions:
+                    text = (row.get(column) or "").strip()
+                    if text:
+                        gloss_rows.append((token_id, version_id, text, gloss_source))
+
+        self.conn.executemany(
+            "INSERT INTO gloss (token_id, version_id, text, source_id) VALUES (?, ?, ?, ?) "
+            "ON CONFLICT (token_id, version_id) DO UPDATE SET text=excluded.text",
+            gloss_rows,
+        )
+
+        total = matched + missed
+        rate = (matched / total * 100) if total else 0
+        print(f"  macula: {matched} words matched ({rate:.1f}%), {relinked} tokens "
+              f"re-linked by explicit Strong's, {len(gloss_rows)} glosses")
+
+
 DATASETS = {
     "strongs": "ingest_strongs",
     "oshb": "ingest_oshb",
     "morphgnt": "ingest_morphgnt",
     "translations": "ingest_translations",
     "lxx": "ingest_lxx",
+    "macula": "ingest_macula",
 }
 
 
@@ -463,7 +597,7 @@ def main():
     if not args.dataset and not args.all:
         parser.error("pass --dataset <name> or --all")
 
-    order = (["strongs", "oshb", "morphgnt", "translations", "lxx"]
+    order = (["strongs", "oshb", "morphgnt", "macula", "translations", "lxx"]
              if args.all else [args.dataset])
 
     conn = sqlite3.connect(args.db)
