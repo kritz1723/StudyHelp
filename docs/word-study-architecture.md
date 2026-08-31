@@ -108,3 +108,20 @@ These are product requirements, not nice-to-haves:
   never by editorial preference.
 - The app distinguishes *attested* (in a lexicon/corpus) from *inferred* (a synthesis),
   and labels the latter.
+
+## Implemented so far
+
+The source-acquisition plan above is now backed by working infrastructure:
+
+- `data/sources/sources.json` — the registry. Every dataset with its licence,
+  attribution and a `verified` date (or `unverified`, meaning the licence claim still
+  needs confirming against the licence text).
+- `db/schema.sql` — the schema described above, plus a `source` table and a `fetch_log`
+  audit table. Every text, tag, gloss, sense and perspective row carries a `source_id`;
+  the "unbiased" requirement is enforced by foreign key, not by convention.
+- `scripts/init_db.py` / `scripts/fetch_sources.py` — build and populate.
+
+Corpora are fetched on demand into `data/raw/` (gitignored) rather than committed.
+Committing multi-megabyte corpora would bloat the repo and, for share-alike and
+EULA-bound sources, redistribute them under terms we have not confirmed. The registry
+plus the checksummed fetch log reproduces any dataset without either problem.
