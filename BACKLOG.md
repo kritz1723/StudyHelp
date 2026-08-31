@@ -57,9 +57,23 @@ recorded here rather than dropped, so the trade-off stays visible.
 - [x] **Load the English translations.** Nine editions loaded, 280,600 renderings,
       Wycliffe (1395) through the Berean Standard Bible (2023). KJV verse count checked
       against the known 31,102.
-- [ ] **Ingest the Septuagint — now the critical path.** The whiteboard's transmission
-      chain (Hebrew → LXX → Greek NT → English) is broken in the middle without it.
-      Registered but not loaded.
+- [x] **Ingest the Septuagint text.** Swete (Cambridge 1909–1930) loaded, 22,955 verses,
+      readable alongside every other version.
+- [ ] **Lemma-level LXX bridging is BLOCKED by licensing.** This is the most consequential
+      open problem in the project. The chain Hebrew→LXX→Greek NT needs the LXX *tagged by
+      lemma*, and the three available routes each fail:
+      - **Rahlfs via CATSS/CCAT** has the morphology and Strong's tags, but is
+        CC BY-NC-SA (NonCommercial) over a text requiring a signed user declaration.
+        Ruled out by the open-source-only rule, and a test now enforces that it is
+        never fetched.
+      - **Swete** is public domain and loaded, but its published files carry no lemma
+        or morphology tagging at all.
+      - **Open Scriptures LXX lemmas** are CC BY 4.0, but keyed to the CCAT text we
+        cannot take. Open keys into a closed text unlock nothing on their own.
+      Options, in rough order of cost: tag Swete ourselves with an open morphological
+      analyser (James Tauber's greek-inflexion is the obvious candidate, and the Swete
+      repo already anticipates this); seek permission for CCAT use; or accept
+      surface-form-only bridging and label it as such. **Needs a decision.**
 - [ ] **Per-layer occurrence counts.** Show a word's count in Hebrew, LXX, Greek NT and
       each English version side by side, as sketched on the board.
 - [ ] **Mark primary vs derivative sources** in the registry. A tagged original-language

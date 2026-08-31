@@ -255,7 +255,8 @@ function setupVerse(first) {
       const text = texts[select.value];
       const version = VERSIONS.find((v) => v.id === select.value);
       target.innerHTML = text
-        ? `${esc(text)}<br><span class="which">${esc(version ? version.name : select.value)}${version && version.from ? `, translated from the ${esc(version.from)}` : ''}</span>`
+        ? `${esc(text)}<br><span class="which">${esc(version ? version.name : select.value)}${version && version.from ? `, translated from the ${esc(version.from)}` : ''}` +
+          `${version && version.caution ? ` — ${esc(version.caution)}` : ''}</span>`
         : '<span class="which">This translation does not carry this verse.</span>';
     } catch {
       target.innerHTML = '<span class="which">That verse is not available here.</span>';

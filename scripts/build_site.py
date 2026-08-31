@@ -75,9 +75,16 @@ def build(conn, out_dir):
     ):
         dates.setdefault(book, {})[tradition] = [earliest, latest]
 
+    # A caution travels with the version rather than being left for the reader to
+    # discover: LXX chapter and verse numbering genuinely differs from the Hebrew
+    # and English, most visibly in the Psalms.
+    cautions = {
+        "lxx-swete": ("Septuagint numbering differs from the Hebrew and English in places, "
+                      "the Psalms especially, so this verse may not correspond exactly."),
+    }
     versions = [
         {"id": vid, "name": name, "language": language, "year": year, "era": era,
-         "from": translated_from}
+         "from": translated_from, "caution": cautions.get(vid)}
         for vid, name, language, year, era, translated_from in conn.execute(
             "SELECT id, name, language, year, era, translated_from FROM version "
             "ORDER BY CASE WHEN year IS NULL THEN 9999 ELSE year END"

@@ -81,6 +81,7 @@ Fetched corpora and the generated database are gitignored — the *registry* and
 | Hebrew tokens (OSHB / WLC) | 306,785 |
 | Greek tokens (MorphGNT / SBLGNT) | 137,554 |
 | Translated verses | 280,600 across 9 editions |
+| Septuagint verses (Swete) | 22,955 |
 | Lemmas | 14,686 |
 | Attested senses | 28,367 |
 | Composition-date ranges | 132 (66 books × 2 traditions) |

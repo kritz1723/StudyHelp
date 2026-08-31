@@ -64,12 +64,12 @@ class Ingestor:
 
     # -- shared helpers ----------------------------------------------------
 
-    def verse_id(self, book_id, chapter, verse):
-        key = (book_id, chapter, verse)
+    def verse_id(self, book_id, chapter, verse, versification="kjv"):
+        key = (book_id, chapter, verse, versification)
         if key in self.verse_cache:
             return self.verse_cache[key]
         cur = self.conn.execute(
-            "INSERT INTO verse (book_id, chapter, verse) VALUES (?, ?, ?) "
+            "INSERT INTO verse (book_id, chapter, verse, versification) VALUES (?, ?, ?, ?) "
             "ON CONFLICT (book_id, chapter, verse, versification) DO NOTHING",
             key,
         )
@@ -77,7 +77,8 @@ class Ingestor:
             vid = cur.lastrowid
         else:
             vid = self.conn.execute(
-                "SELECT id FROM verse WHERE book_id=? AND chapter=? AND verse=?", key
+                "SELECT id FROM verse WHERE book_id=? AND chapter=? AND verse=? AND versification=?",
+                key,
             ).fetchone()[0]
         self.verse_cache[key] = vid
         return vid
@@ -334,11 +335,110 @@ class Ingestor:
         print(f"  translations: {loaded} renderings")
 
 
+    def ingest_lxx(self):
+        """Load Swete's Septuagint as a Greek text layer.
+
+        The LXX is the hinge of the transmission chain: it is the only witness to
+        how Hebrew vocabulary was already being rendered into Greek before the New
+        Testament was written.
+
+        Two honest limits are encoded here rather than papered over:
+
+        1. Swete's published files carry no lemma or morphology tagging, so this
+           gives the LXX *text* but not lemma-level bridging. The tagged edition
+           that would give us that (Rahlfs via CATSS/CCAT) is NonCommercial and
+           gated behind a signed declaration, so it is not fetched at all.
+        2. LXX versification genuinely differs from the Hebrew and English (the
+           Psalms most visibly), so these verses are stored under their own
+           `versification` value instead of being forced onto English numbering.
+        """
+        source_id = "lxx-swete-1930"
+        version_id = "lxx-swete"
+
+        vers_path = RAW / "lxx" / "00-Swete_versification.csv"
+        words_path = RAW / "lxx" / "01-Swete_word_with_punctuations.csv"
+        if not (vers_path.exists() and words_path.exists()):
+            print("  missing Swete files -- run fetch_sources.py first")
+            return
+
+        # Swete's three-letter codes for the books that exist in our canon. The
+        # deuterocanonical books it also carries (Judith, Tobit, Sirach, Wisdom,
+        # Baruch, Maccabees) have no home in a 66-book canon and are skipped.
+        codes = {
+            "Gen": "Genesis", "Exo": "Exodus", "Lev": "Leviticus", "Num": "Numbers",
+            "Deu": "Deuteronomy", "Jos": "Joshua", "Jdg": "Judges", "Rut": "Ruth",
+            "1Sa": "1 Samuel", "2Sa": "2 Samuel", "1Ki": "1 Kings", "2Ki": "2 Kings",
+            "1Ch": "1 Chronicles", "2Ch": "2 Chronicles", "Ezr": "Ezra", "Neh": "Nehemiah",
+            "Est": "Esther", "Job": "Job", "Psa": "Psalms", "Pro": "Proverbs",
+            "Ecc": "Ecclesiastes", "Sol": "Song of Solomon", "Isa": "Isaiah",
+            "Jer": "Jeremiah", "Lam": "Lamentations", "Eze": "Ezekiel", "Dan": "Daniel",
+            "Hos": "Hosea", "Joe": "Joel", "Amo": "Amos", "Oba": "Obadiah", "Jon": "Jonah",
+            "Mic": "Micah", "Nah": "Nahum", "Hab": "Habakkuk", "Zep": "Zephaniah",
+            "Hag": "Haggai", "Zec": "Zechariah", "Mal": "Malachi",
+        }
+        books = {name: bid for bid, name in self.conn.execute("SELECT id, name FROM book")}
+
+        words = {}
+        with open(words_path, encoding="utf-8") as fh:
+            for line in fh:
+                index, _, word = line.rstrip("\n").partition("\t")
+                if index.isdigit():
+                    words[int(index)] = word
+
+        starts = []
+        with open(vers_path, encoding="utf-8") as fh:
+            for line in fh:
+                index, _, ref = line.rstrip("\n").partition("\t")
+                if index.isdigit() and ref:
+                    starts.append((int(index), ref))
+        starts.sort()
+
+        self.conn.execute(
+            "INSERT INTO version (id, source_id, name, language, year, era, translated_from) "
+            "VALUES (?, ?, ?, ?, ?, ?, ?) ON CONFLICT(id) DO UPDATE SET name=excluded.name",
+            (version_id, source_id, "Septuagint (Swete)", "grc", -200, "ancient", "Hebrew"),
+        )
+
+        last_index = max(words) if words else 0
+        rows = []
+        skipped = set()
+        for position, (start, ref) in enumerate(starts):
+            end = starts[position + 1][0] - 1 if position + 1 < len(starts) else last_index
+            code, _, coords = ref.partition(".")
+            name = codes.get(code)
+            if not name:
+                skipped.add(code)
+                continue
+            chapter_text, _, verse_text = coords.partition(":")
+            if not (chapter_text.isdigit() and verse_text.isdigit()):
+                continue
+
+            text = " ".join(
+                words[i] for i in range(start, end + 1) if i in words
+            ).strip()
+            if not text:
+                continue
+
+            vid = self.verse_id(books[name], int(chapter_text), int(verse_text),
+                                versification="lxx")
+            rows.append((vid, version_id, text, source_id))
+
+        self.conn.executemany(
+            "INSERT INTO rendering (verse_id, version_id, text, source_id) "
+            "VALUES (?, ?, ?, ?) ON CONFLICT (verse_id, version_id) DO UPDATE SET "
+            "text=excluded.text",
+            rows,
+        )
+        print(f"  lxx: {len(rows)} verses"
+              f"{f', skipped {len(skipped)} non-canonical books' if skipped else ''}")
+
+
 DATASETS = {
     "strongs": "ingest_strongs",
     "oshb": "ingest_oshb",
     "morphgnt": "ingest_morphgnt",
     "translations": "ingest_translations",
+    "lxx": "ingest_lxx",
 }
 
 
@@ -352,7 +452,8 @@ def main():
     if not args.dataset and not args.all:
         parser.error("pass --dataset <name> or --all")
 
-    order = ["strongs", "oshb", "morphgnt", "translations"] if args.all else [args.dataset]
+    order = (["strongs", "oshb", "morphgnt", "translations", "lxx"]
+             if args.all else [args.dataset])
 
     conn = sqlite3.connect(args.db)
     conn.execute("PRAGMA foreign_keys = ON")
