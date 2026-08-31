@@ -26,6 +26,7 @@ python3 scripts/init_db.py            # create the DB, load the source registry 
 python3 scripts/fetch_sources.py --all  # retrieve the corpora into data/raw/ (~47 MB)
 python3 scripts/ingest.py --all       # parse them into the database
 python3 scripts/word_study.py H430    # study a word
+python3 scripts/build_site.py         # generate the static site into site/
 ```
 
 Then, for example:
@@ -66,6 +67,8 @@ Fetched corpora and the generated database are gitignored — the *registry* and
 | `scripts/fetch_sources.py` | Fetches datasets and writes a `fetch_log` row (URL, timestamp, bytes, sha256) for every attempt. |
 | `scripts/ingest.py` | Parses Strong's, OSHB (Hebrew) and MorphGNT (Greek) into `lemma`/`sense`/`token`. |
 | `scripts/word_study.py` | CLI: first appearance, distribution, attested meanings — with sources. |
+| `scripts/build_site.py` | Generates the static site (search index + one JSON per lemma) from the DB. |
+| `web/` | Front end: search, disambiguation, lemma detail. No framework, no backend. |
 | `tests/` | Canon integrity, registry validity, schema provenance, corpus spot-checks, reference parser. |
 | `docs/word-study-architecture.md` | Data model, the four views, source strategy, build order. |
 | `bible-study/js/books.js` | Canon metadata and a loose reference parser (`John 3:16-18`, `1 cor 13`, `Jn`). |
@@ -84,6 +87,20 @@ Fetched corpora and the generated database are gitignored — the *registry* and
 Spot-checked against independently known counts: *elohim* (H430) 2,600 occurrences
 first at Genesis 1:1; *agape* (G26) 116 occurrences first at Matthew 24:12, clustering
 in 1 John. These are asserted in the test suite so parser regressions surface fast.
+
+## Deployment
+
+GitHub Actions builds and publishes the site to GitHub Pages on every push to `main`
+(`.github/workflows/deploy.yml`). The database is rebuilt from the source registry on
+each run, so what ships always traces back to the registered sources rather than to a
+checked-in snapshot. The corpus spot-checks run against the very database the site is
+built from, so a parser regression fails the deploy instead of shipping.
+
+The site is fully static — a search index plus one JSON file per lemma — so Pages can
+serve it with no backend.
+
+**One-time setup:** in the repository settings, under Pages, set the source to
+**GitHub Actions**. Until that is done the deploy job will fail at the publish step.
 
 ## Provenance
 

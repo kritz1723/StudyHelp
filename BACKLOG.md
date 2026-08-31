@@ -67,6 +67,16 @@ recorded here rather than dropped, so the trade-off stays visible.
 - [ ] **Consider Postgres.** SQLite is right for now. Full-corpus concordance queries
       across every version may outgrow it.
 
+## Deployment
+
+- [x] **Static site + Pages deploy via Actions.** Search, disambiguation and lemma detail,
+      published on every push to `main`.
+- [ ] **Repo setting: Pages source = GitHub Actions.** Must be set once by hand; the
+      deploy job cannot do it for itself.
+- [ ] **Index size.** `index.json` is 2.1 MB and every visitor downloads it. Fine now;
+      shard or move to a prefix-indexed search once English translations land.
+- [ ] **14,686 small files.** Works on Pages, but a keyed bundle would deploy faster.
+
 ## Product
 
 - [ ] **English word → lemma disambiguation UI.** Searching "love" must resolve to several
