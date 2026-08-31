@@ -1,0 +1,77 @@
+name: Deploy
+
+# Builds the static word-study site and publishes it to GitHub Pages.
+# The site is generated from the database, which is itself rebuilt from the
+# source registry on every run -- so what is deployed always traces back to the
+# registered sources rather than to a checked-in snapshot.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Let an in-flight deploy finish rather than cancelling it midway.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: Build site
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Build database
+        run: python3 scripts/init_db.py
+
+      - name: Fetch corpora
+        run: python3 scripts/fetch_sources.py --all
+
+      - name: Ingest
+        run: python3 scripts/ingest.py --all
+
+      - name: Verify before publishing
+        # The corpus spot-checks (elohim from Genesis 1:1, agape 116x from
+        # Matthew 24:12) run against the very database the site is built from,
+        # so a parser regression fails the deploy instead of shipping.
+        run: python3 -m unittest discover tests -v
+
+      - name: Build static site
+        run: python3 scripts/build_site.py --out site
+
+      - name: Report what is being published
+        run: |
+          python3 - <<'PY'
+          import json, pathlib
+          stats = json.loads(pathlib.Path("site/stats.json").read_text())
+          for key, value in stats.items():
+              print(f"{key}: {value:,}")
+          print("lemma files:", len(list(pathlib.Path("site/lemma").glob("*.json"))))
+          PY
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+
+  deploy:
+    name: Publish to Pages
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

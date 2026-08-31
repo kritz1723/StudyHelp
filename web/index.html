@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>StudyHelp — Bible word study</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ctext y='26' font-size='26'%3E%F0%9F%93%9C%3C/text%3E%3C/svg%3E">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header>
+  <h1>StudyHelp</h1>
+  <p class="tagline">Decode a verse by tracing the word — where it first appears,
+     everywhere else it is used, and what it meant. Every claim carries its source.</p>
+</header>
+
+<main>
+  <section class="search">
+    <label for="q" class="visually-hidden">Search</label>
+    <input id="q" type="search" autocomplete="off" spellcheck="false"
+           placeholder="Search a word, transliteration or Strong's number — try love, agape, or H430">
+    <p id="hint" class="hint">Loading index…</p>
+  </section>
+
+  <section id="results" class="results" hidden></section>
+
+  <section id="detail" class="detail" hidden></section>
+
+  <section id="about" class="about">
+    <h2>Why the lemma, not the English word</h2>
+    <p>English surface forms are the wrong unit of study. “Love” in the KJV and “love” in a
+       modern translation may render different Greek lemmas — <em>agape</em>, <em>phileo</em>,
+       <em>eros</em>, <em>storge</em> — and one Greek lemma may be rendered by a dozen
+       different English words across versions and eras. So an English search is only the
+       entry point: it resolves to one or more lemmas, and every view runs off the lemma.</p>
+    <p class="stats" id="stats"></p>
+    <p class="caveat"><strong>What this does not yet do.</strong> No English translations are
+       loaded, so there is no translation-drift view. Hebrew senses come from Strong's only,
+       which is thin and dated. Where sources disagree, showing that disagreement is the
+       goal — with one lexicon loaded, there is not yet disagreement to show.</p>
+  </section>
+</main>
+
+<footer>
+  <h2>Sources</h2>
+  <ul id="sources"></ul>
+  <p>Built from open-source and public-domain data only.
+     <a href="https://github.com/kritz1723/StudyHelp">Source code</a>.</p>
+</footer>
+
+<script src="app.js"></script>
+</body>
+</html>

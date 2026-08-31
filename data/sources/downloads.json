@@ -5,30 +5,307 @@
     {
       "source_id": "openscriptures-strongs",
       "files": [
-        {"url": "https://raw.githubusercontent.com/openscriptures/strongs/master/hebrew/strongs-hebrew-dictionary.js", "path": "strongs/strongs-hebrew-dictionary.js"},
-        {"url": "https://raw.githubusercontent.com/openscriptures/strongs/master/greek/strongs-greek-dictionary.js", "path": "strongs/strongs-greek-dictionary.js"}
+        {
+          "url": "https://raw.githubusercontent.com/openscriptures/strongs/master/hebrew/strongs-hebrew-dictionary.js",
+          "path": "strongs/strongs-hebrew-dictionary.js"
+        },
+        {
+          "url": "https://raw.githubusercontent.com/openscriptures/strongs/master/greek/strongs-greek-dictionary.js",
+          "path": "strongs/strongs-greek-dictionary.js"
+        }
       ]
     },
     {
       "source_id": "openscriptures-hebrewlexicon",
       "files": [
-        {"url": "https://raw.githubusercontent.com/openscriptures/HebrewLexicon/master/HebrewStrong.xml", "path": "hebrewlexicon/HebrewStrong.xml"},
-        {"url": "https://raw.githubusercontent.com/openscriptures/HebrewLexicon/master/BrownDriverBriggs.xml", "path": "hebrewlexicon/BrownDriverBriggs.xml"},
-        {"url": "https://raw.githubusercontent.com/openscriptures/HebrewLexicon/master/LexicalIndex.xml", "path": "hebrewlexicon/LexicalIndex.xml"}
-      ]
-    },
-    {
-      "source_id": "morphgnt-sblgnt",
-      "note": "26 book files, 61-Mt-morphgnt.txt .. 87-Re-morphgnt.txt; enumerate from the repo listing at ingest time.",
-      "files": [
-        {"url": "https://raw.githubusercontent.com/morphgnt/sblgnt/master/61-Mt-morphgnt.txt", "path": "morphgnt/61-Mt-morphgnt.txt"}
+        {
+          "url": "https://raw.githubusercontent.com/openscriptures/HebrewLexicon/master/HebrewStrong.xml",
+          "path": "hebrewlexicon/HebrewStrong.xml"
+        },
+        {
+          "url": "https://raw.githubusercontent.com/openscriptures/HebrewLexicon/master/BrownDriverBriggs.xml",
+          "path": "hebrewlexicon/BrownDriverBriggs.xml"
+        },
+        {
+          "url": "https://raw.githubusercontent.com/openscriptures/HebrewLexicon/master/LexicalIndex.xml",
+          "path": "hebrewlexicon/LexicalIndex.xml"
+        }
       ]
     },
     {
       "source_id": "oshb-morphhb",
-      "note": "One OSIS XML per book under wlc/; enumerate at ingest time.",
+      "note": "One OSIS XML per book, named with the OSIS abbreviation (matches canon.json abbr).",
       "files": [
-        {"url": "https://raw.githubusercontent.com/openscriptures/morphhb/master/wlc/Gen.xml", "path": "oshb/Gen.xml"}
+        {
+          "url": "https://raw.githubusercontent.com/openscriptures/morphhb/master/wlc/Gen.xml",
+          "path": "oshb/Gen.xml"
+        },
+        {
+          "url": "https://raw.githubusercontent.com/openscriptures/morphhb/master/wlc/Exod.xml",
+          "path": "oshb/Exod.xml"
+        },
+        {
+          "url": "https://raw.githubusercontent.com/openscriptures/morphhb/master/wlc/Lev.xml",
+          "path": "oshb/Lev.xml"
+        },
+        {
+          "url": "https://raw.githubusercontent.com/openscriptures/morphhb/master/wlc/Num.xml",
+          "path": "oshb/Num.xml"
+        },
+        {
+          "url": "https://raw.githubusercontent.com/openscriptures/morphhb/master/wlc/Deut.xml",
+          "path": "oshb/Deut.xml"
+        },
+        {
+          "url": "https://raw.githubusercontent.com/openscriptures/morphhb/master/wlc/Josh.xml",
+          "path": "oshb/Josh.xml"
+        },
+        {
+          "url": "https://raw.githubusercontent.com/openscriptures/morphhb/master/wlc/Judg.xml",
+          "path": "oshb/Judg.xml"
+        },
+        {
+          "url": "https://raw.githubusercontent.com/openscriptures/morphhb/master/wlc/Ruth.xml",
+          "path": "oshb/Ruth.xml"
+        },
+        {
+          "url": "https://raw.githubusercontent.com/openscriptures/morphhb/master/wlc/1Sam.xml",
+          "path": "oshb/1Sam.xml"
+        },
+        {
+          "url": "https://raw.githubusercontent.com/openscriptures/morphhb/master/wlc/2Sam.xml",
+          "path": "oshb/2Sam.xml"
+        },
+        {
+          "url": "https://raw.githubusercontent.com/openscriptures/morphhb/master/wlc/1Kgs.xml",
+          "path": "oshb/1Kgs.xml"
+        },
+        {
+          "url": "https://raw.githubusercontent.com/openscriptures/morphhb/master/wlc/2Kgs.xml",
+          "path": "oshb/2Kgs.xml"
+        },
+        {
+          "url": "https://raw.githubusercontent.com/openscriptures/morphhb/master/wlc/1Chr.xml",
+          "path": "oshb/1Chr.xml"
+        },
+        {
+          "url": "https://raw.githubusercontent.com/openscriptures/morphhb/master/wlc/2Chr.xml",
+          "path": "oshb/2Chr.xml"
+        },
+        {
+          "url": "https://raw.githubusercontent.com/openscriptures/morphhb/master/wlc/Ezra.xml",
+          "path": "oshb/Ezra.xml"
+        },
+        {
+          "url": "https://raw.githubusercontent.com/openscriptures/morphhb/master/wlc/Neh.xml",
+          "path": "oshb/Neh.xml"
+        },
+        {
+          "url": "https://raw.githubusercontent.com/openscriptures/morphhb/master/wlc/Esth.xml",
+          "path": "oshb/Esth.xml"
+        },
+        {
+          "url": "https://raw.githubusercontent.com/openscriptures/morphhb/master/wlc/Job.xml",
+          "path": "oshb/Job.xml"
+        },
+        {
+          "url": "https://raw.githubusercontent.com/openscriptures/morphhb/master/wlc/Ps.xml",
+          "path": "oshb/Ps.xml"
+        },
+        {
+          "url": "https://raw.githubusercontent.com/openscriptures/morphhb/master/wlc/Prov.xml",
+          "path": "oshb/Prov.xml"
+        },
+        {
+          "url": "https://raw.githubusercontent.com/openscriptures/morphhb/master/wlc/Eccl.xml",
+          "path": "oshb/Eccl.xml"
+        },
+        {
+          "url": "https://raw.githubusercontent.com/openscriptures/morphhb/master/wlc/Song.xml",
+          "path": "oshb/Song.xml"
+        },
+        {
+          "url": "https://raw.githubusercontent.com/openscriptures/morphhb/master/wlc/Isa.xml",
+          "path": "oshb/Isa.xml"
+        },
+        {
+          "url": "https://raw.githubusercontent.com/openscriptures/morphhb/master/wlc/Jer.xml",
+          "path": "oshb/Jer.xml"
+        },
+        {
+          "url": "https://raw.githubusercontent.com/openscriptures/morphhb/master/wlc/Lam.xml",
+          "path": "oshb/Lam.xml"
+        },
+        {
+          "url": "https://raw.githubusercontent.com/openscriptures/morphhb/master/wlc/Ezek.xml",
+          "path": "oshb/Ezek.xml"
+        },
+        {
+          "url": "https://raw.githubusercontent.com/openscriptures/morphhb/master/wlc/Dan.xml",
+          "path": "oshb/Dan.xml"
+        },
+        {
+          "url": "https://raw.githubusercontent.com/openscriptures/morphhb/master/wlc/Hos.xml",
+          "path": "oshb/Hos.xml"
+        },
+        {
+          "url": "https://raw.githubusercontent.com/openscriptures/morphhb/master/wlc/Joel.xml",
+          "path": "oshb/Joel.xml"
+        },
+        {
+          "url": "https://raw.githubusercontent.com/openscriptures/morphhb/master/wlc/Amos.xml",
+          "path": "oshb/Amos.xml"
+        },
+        {
+          "url": "https://raw.githubusercontent.com/openscriptures/morphhb/master/wlc/Obad.xml",
+          "path": "oshb/Obad.xml"
+        },
+        {
+          "url": "https://raw.githubusercontent.com/openscriptures/morphhb/master/wlc/Jonah.xml",
+          "path": "oshb/Jonah.xml"
+        },
+        {
+          "url": "https://raw.githubusercontent.com/openscriptures/morphhb/master/wlc/Mic.xml",
+          "path": "oshb/Mic.xml"
+        },
+        {
+          "url": "https://raw.githubusercontent.com/openscriptures/morphhb/master/wlc/Nah.xml",
+          "path": "oshb/Nah.xml"
+        },
+        {
+          "url": "https://raw.githubusercontent.com/openscriptures/morphhb/master/wlc/Hab.xml",
+          "path": "oshb/Hab.xml"
+        },
+        {
+          "url": "https://raw.githubusercontent.com/openscriptures/morphhb/master/wlc/Zeph.xml",
+          "path": "oshb/Zeph.xml"
+        },
+        {
+          "url": "https://raw.githubusercontent.com/openscriptures/morphhb/master/wlc/Hag.xml",
+          "path": "oshb/Hag.xml"
+        },
+        {
+          "url": "https://raw.githubusercontent.com/openscriptures/morphhb/master/wlc/Zech.xml",
+          "path": "oshb/Zech.xml"
+        },
+        {
+          "url": "https://raw.githubusercontent.com/openscriptures/morphhb/master/wlc/Mal.xml",
+          "path": "oshb/Mal.xml"
+        }
+      ]
+    },
+    {
+      "source_id": "morphgnt-sblgnt",
+      "note": "One space-delimited file per NT book, numbered 61-87 in canonical order.",
+      "files": [
+        {
+          "url": "https://raw.githubusercontent.com/morphgnt/sblgnt/master/61-Mt-morphgnt.txt",
+          "path": "morphgnt/61-Mt-morphgnt.txt"
+        },
+        {
+          "url": "https://raw.githubusercontent.com/morphgnt/sblgnt/master/62-Mk-morphgnt.txt",
+          "path": "morphgnt/62-Mk-morphgnt.txt"
+        },
+        {
+          "url": "https://raw.githubusercontent.com/morphgnt/sblgnt/master/63-Lk-morphgnt.txt",
+          "path": "morphgnt/63-Lk-morphgnt.txt"
+        },
+        {
+          "url": "https://raw.githubusercontent.com/morphgnt/sblgnt/master/64-Jn-morphgnt.txt",
+          "path": "morphgnt/64-Jn-morphgnt.txt"
+        },
+        {
+          "url": "https://raw.githubusercontent.com/morphgnt/sblgnt/master/65-Ac-morphgnt.txt",
+          "path": "morphgnt/65-Ac-morphgnt.txt"
+        },
+        {
+          "url": "https://raw.githubusercontent.com/morphgnt/sblgnt/master/66-Ro-morphgnt.txt",
+          "path": "morphgnt/66-Ro-morphgnt.txt"
+        },
+        {
+          "url": "https://raw.githubusercontent.com/morphgnt/sblgnt/master/67-1Co-morphgnt.txt",
+          "path": "morphgnt/67-1Co-morphgnt.txt"
+        },
+        {
+          "url": "https://raw.githubusercontent.com/morphgnt/sblgnt/master/68-2Co-morphgnt.txt",
+          "path": "morphgnt/68-2Co-morphgnt.txt"
+        },
+        {
+          "url": "https://raw.githubusercontent.com/morphgnt/sblgnt/master/69-Ga-morphgnt.txt",
+          "path": "morphgnt/69-Ga-morphgnt.txt"
+        },
+        {
+          "url": "https://raw.githubusercontent.com/morphgnt/sblgnt/master/70-Eph-morphgnt.txt",
+          "path": "morphgnt/70-Eph-morphgnt.txt"
+        },
+        {
+          "url": "https://raw.githubusercontent.com/morphgnt/sblgnt/master/71-Php-morphgnt.txt",
+          "path": "morphgnt/71-Php-morphgnt.txt"
+        },
+        {
+          "url": "https://raw.githubusercontent.com/morphgnt/sblgnt/master/72-Col-morphgnt.txt",
+          "path": "morphgnt/72-Col-morphgnt.txt"
+        },
+        {
+          "url": "https://raw.githubusercontent.com/morphgnt/sblgnt/master/73-1Th-morphgnt.txt",
+          "path": "morphgnt/73-1Th-morphgnt.txt"
+        },
+        {
+          "url": "https://raw.githubusercontent.com/morphgnt/sblgnt/master/74-2Th-morphgnt.txt",
+          "path": "morphgnt/74-2Th-morphgnt.txt"
+        },
+        {
+          "url": "https://raw.githubusercontent.com/morphgnt/sblgnt/master/75-1Ti-morphgnt.txt",
+          "path": "morphgnt/75-1Ti-morphgnt.txt"
+        },
+        {
+          "url": "https://raw.githubusercontent.com/morphgnt/sblgnt/master/76-2Ti-morphgnt.txt",
+          "path": "morphgnt/76-2Ti-morphgnt.txt"
+        },
+        {
+          "url": "https://raw.githubusercontent.com/morphgnt/sblgnt/master/77-Tit-morphgnt.txt",
+          "path": "morphgnt/77-Tit-morphgnt.txt"
+        },
+        {
+          "url": "https://raw.githubusercontent.com/morphgnt/sblgnt/master/78-Phm-morphgnt.txt",
+          "path": "morphgnt/78-Phm-morphgnt.txt"
+        },
+        {
+          "url": "https://raw.githubusercontent.com/morphgnt/sblgnt/master/79-Heb-morphgnt.txt",
+          "path": "morphgnt/79-Heb-morphgnt.txt"
+        },
+        {
+          "url": "https://raw.githubusercontent.com/morphgnt/sblgnt/master/80-Jas-morphgnt.txt",
+          "path": "morphgnt/80-Jas-morphgnt.txt"
+        },
+        {
+          "url": "https://raw.githubusercontent.com/morphgnt/sblgnt/master/81-1Pe-morphgnt.txt",
+          "path": "morphgnt/81-1Pe-morphgnt.txt"
+        },
+        {
+          "url": "https://raw.githubusercontent.com/morphgnt/sblgnt/master/82-2Pe-morphgnt.txt",
+          "path": "morphgnt/82-2Pe-morphgnt.txt"
+        },
+        {
+          "url": "https://raw.githubusercontent.com/morphgnt/sblgnt/master/83-1Jn-morphgnt.txt",
+          "path": "morphgnt/83-1Jn-morphgnt.txt"
+        },
+        {
+          "url": "https://raw.githubusercontent.com/morphgnt/sblgnt/master/84-2Jn-morphgnt.txt",
+          "path": "morphgnt/84-2Jn-morphgnt.txt"
+        },
+        {
+          "url": "https://raw.githubusercontent.com/morphgnt/sblgnt/master/85-3Jn-morphgnt.txt",
+          "path": "morphgnt/85-3Jn-morphgnt.txt"
+        },
+        {
+          "url": "https://raw.githubusercontent.com/morphgnt/sblgnt/master/86-Jud-morphgnt.txt",
+          "path": "morphgnt/86-Jud-morphgnt.txt"
+        },
+        {
+          "url": "https://raw.githubusercontent.com/morphgnt/sblgnt/master/87-Re-morphgnt.txt",
+          "path": "morphgnt/87-Re-morphgnt.txt"
+        }
       ]
     },
     {
