@@ -47,6 +47,10 @@ recorded here rather than dropped, so the trade-off stays visible.
 
 ## Engineering
 
+- [ ] **No inline scripting in workflows.** The deploy broke because a reporting step
+      was inline YAML that no test could reach. It is a tested script now; the same
+      should be true of anything else that runs only in CI.
+
 - [x] **Ingestion parsers.** `scripts/ingest.py` loads Strong's (lemmas + senses), OSHB
       (Hebrew tokens) and MorphGNT (Greek tokens). 306,785 Hebrew and 137,554 Greek
       tokens; 98.5% of Greek tokens link to a Strong's entry.

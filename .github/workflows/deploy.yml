@@ -50,14 +50,7 @@ jobs:
         run: python3 scripts/build_site.py --out site
 
       - name: Report what is being published
-        run: |
-          python3 - <<'PY'
-          import json, pathlib
-          stats = json.loads(pathlib.Path("site/stats.json").read_text())
-          for key, value in stats.items():
-              print(f"{key}: {value:,}")
-          print("lemma files:", len(list(pathlib.Path("site/lemma").glob("*.json"))))
-          PY
+        run: python3 scripts/report_stats.py --site site
 
       - uses: actions/configure-pages@v5
 
