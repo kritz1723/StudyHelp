@@ -1,0 +1,742 @@
+{
+  "$comment": "Approximate composition-date ranges per book, given for two broad scholarly traditions. Ranges, never points: the date a biblical book was written is genuinely contested, and presenting a single year would smuggle one school's position into an app whose premise is not doing that. The disagreement between the two columns is information, not noise. Years are negative for BCE. These are approximate consensus ranges compiled for orientation, not citations of a specific reference work -- see BACKLOG.md for the review item.",
+  "schema_version": 1,
+  "traditions": {
+    "traditional": {
+      "label": "Traditional dating",
+      "description": "Follows traditional attributions of authorship -- Mosaic authorship of the Pentateuch, single-author Isaiah, sixth-century Daniel, and early dates for the Gospels and Pauline letters."
+    },
+    "critical": {
+      "label": "Critical dating",
+      "description": "Follows mainstream historical-critical scholarship -- composite Pentateuchal sources reaching final form in the Persian period, multiple authors in Isaiah, a Maccabean Daniel, and later dates for the Gospels and disputed letters."
+    }
+  },
+  "books": [
+    {
+      "book": "Genesis",
+      "traditional": {
+        "earliest": -1446,
+        "latest": -1406
+      },
+      "critical": {
+        "earliest": -900,
+        "latest": -400
+      }
+    },
+    {
+      "book": "Exodus",
+      "traditional": {
+        "earliest": -1446,
+        "latest": -1406
+      },
+      "critical": {
+        "earliest": -900,
+        "latest": -400
+      }
+    },
+    {
+      "book": "Leviticus",
+      "traditional": {
+        "earliest": -1446,
+        "latest": -1406
+      },
+      "critical": {
+        "earliest": -900,
+        "latest": -400
+      }
+    },
+    {
+      "book": "Numbers",
+      "traditional": {
+        "earliest": -1446,
+        "latest": -1406
+      },
+      "critical": {
+        "earliest": -900,
+        "latest": -400
+      }
+    },
+    {
+      "book": "Deuteronomy",
+      "traditional": {
+        "earliest": -1446,
+        "latest": -1406
+      },
+      "critical": {
+        "earliest": -900,
+        "latest": -400
+      }
+    },
+    {
+      "book": "Joshua",
+      "traditional": {
+        "earliest": -1400,
+        "latest": -1370
+      },
+      "critical": {
+        "earliest": -640,
+        "latest": -550
+      }
+    },
+    {
+      "book": "Judges",
+      "traditional": {
+        "earliest": -1050,
+        "latest": -1000
+      },
+      "critical": {
+        "earliest": -640,
+        "latest": -550
+      }
+    },
+    {
+      "book": "Ruth",
+      "traditional": {
+        "earliest": -1030,
+        "latest": -1010
+      },
+      "critical": {
+        "earliest": -550,
+        "latest": -400
+      }
+    },
+    {
+      "book": "1 Samuel",
+      "traditional": {
+        "earliest": -930,
+        "latest": -722
+      },
+      "critical": {
+        "earliest": -640,
+        "latest": -550
+      }
+    },
+    {
+      "book": "2 Samuel",
+      "traditional": {
+        "earliest": -930,
+        "latest": -722
+      },
+      "critical": {
+        "earliest": -640,
+        "latest": -550
+      }
+    },
+    {
+      "book": "1 Kings",
+      "traditional": {
+        "earliest": -560,
+        "latest": -538
+      },
+      "critical": {
+        "earliest": -640,
+        "latest": -550
+      }
+    },
+    {
+      "book": "2 Kings",
+      "traditional": {
+        "earliest": -560,
+        "latest": -538
+      },
+      "critical": {
+        "earliest": -640,
+        "latest": -550
+      }
+    },
+    {
+      "book": "1 Chronicles",
+      "traditional": {
+        "earliest": -450,
+        "latest": -400
+      },
+      "critical": {
+        "earliest": -400,
+        "latest": -300
+      }
+    },
+    {
+      "book": "2 Chronicles",
+      "traditional": {
+        "earliest": -450,
+        "latest": -400
+      },
+      "critical": {
+        "earliest": -400,
+        "latest": -300
+      }
+    },
+    {
+      "book": "Ezra",
+      "traditional": {
+        "earliest": -440,
+        "latest": -420
+      },
+      "critical": {
+        "earliest": -400,
+        "latest": -300
+      }
+    },
+    {
+      "book": "Nehemiah",
+      "traditional": {
+        "earliest": -440,
+        "latest": -420
+      },
+      "critical": {
+        "earliest": -400,
+        "latest": -300
+      }
+    },
+    {
+      "book": "Esther",
+      "traditional": {
+        "earliest": -470,
+        "latest": -450
+      },
+      "critical": {
+        "earliest": -400,
+        "latest": -300
+      }
+    },
+    {
+      "book": "Job",
+      "traditional": {
+        "earliest": -2000,
+        "latest": -1800
+      },
+      "critical": {
+        "earliest": -600,
+        "latest": -400
+      }
+    },
+    {
+      "book": "Psalms",
+      "traditional": {
+        "earliest": -1400,
+        "latest": -450
+      },
+      "critical": {
+        "earliest": -1000,
+        "latest": -300
+      }
+    },
+    {
+      "book": "Proverbs",
+      "traditional": {
+        "earliest": -950,
+        "latest": -700
+      },
+      "critical": {
+        "earliest": -700,
+        "latest": -300
+      }
+    },
+    {
+      "book": "Ecclesiastes",
+      "traditional": {
+        "earliest": -940,
+        "latest": -930
+      },
+      "critical": {
+        "earliest": -300,
+        "latest": -200
+      }
+    },
+    {
+      "book": "Song of Solomon",
+      "traditional": {
+        "earliest": -965,
+        "latest": -955
+      },
+      "critical": {
+        "earliest": -400,
+        "latest": -200
+      }
+    },
+    {
+      "book": "Isaiah",
+      "traditional": {
+        "earliest": -740,
+        "latest": -680
+      },
+      "critical": {
+        "earliest": -740,
+        "latest": -500
+      }
+    },
+    {
+      "book": "Jeremiah",
+      "traditional": {
+        "earliest": -627,
+        "latest": -580
+      },
+      "critical": {
+        "earliest": -600,
+        "latest": -550
+      }
+    },
+    {
+      "book": "Lamentations",
+      "traditional": {
+        "earliest": -586,
+        "latest": -580
+      },
+      "critical": {
+        "earliest": -586,
+        "latest": -520
+      }
+    },
+    {
+      "book": "Ezekiel",
+      "traditional": {
+        "earliest": -593,
+        "latest": -571
+      },
+      "critical": {
+        "earliest": -593,
+        "latest": -500
+      }
+    },
+    {
+      "book": "Daniel",
+      "traditional": {
+        "earliest": -605,
+        "latest": -530
+      },
+      "critical": {
+        "earliest": -167,
+        "latest": -164
+      }
+    },
+    {
+      "book": "Hosea",
+      "traditional": {
+        "earliest": -750,
+        "latest": -715
+      },
+      "critical": {
+        "earliest": -750,
+        "latest": -700
+      }
+    },
+    {
+      "book": "Joel",
+      "traditional": {
+        "earliest": -835,
+        "latest": -800
+      },
+      "critical": {
+        "earliest": -500,
+        "latest": -350
+      }
+    },
+    {
+      "book": "Amos",
+      "traditional": {
+        "earliest": -760,
+        "latest": -750
+      },
+      "critical": {
+        "earliest": -760,
+        "latest": -740
+      }
+    },
+    {
+      "book": "Obadiah",
+      "traditional": {
+        "earliest": -845,
+        "latest": -840
+      },
+      "critical": {
+        "earliest": -586,
+        "latest": -500
+      }
+    },
+    {
+      "book": "Jonah",
+      "traditional": {
+        "earliest": -780,
+        "latest": -760
+      },
+      "critical": {
+        "earliest": -500,
+        "latest": -350
+      }
+    },
+    {
+      "book": "Micah",
+      "traditional": {
+        "earliest": -735,
+        "latest": -700
+      },
+      "critical": {
+        "earliest": -730,
+        "latest": -650
+      }
+    },
+    {
+      "book": "Nahum",
+      "traditional": {
+        "earliest": -663,
+        "latest": -612
+      },
+      "critical": {
+        "earliest": -663,
+        "latest": -612
+      }
+    },
+    {
+      "book": "Habakkuk",
+      "traditional": {
+        "earliest": -640,
+        "latest": -600
+      },
+      "critical": {
+        "earliest": -640,
+        "latest": -590
+      }
+    },
+    {
+      "book": "Zephaniah",
+      "traditional": {
+        "earliest": -640,
+        "latest": -620
+      },
+      "critical": {
+        "earliest": -640,
+        "latest": -600
+      }
+    },
+    {
+      "book": "Haggai",
+      "traditional": {
+        "earliest": -520,
+        "latest": -520
+      },
+      "critical": {
+        "earliest": -520,
+        "latest": -515
+      }
+    },
+    {
+      "book": "Zechariah",
+      "traditional": {
+        "earliest": -520,
+        "latest": -480
+      },
+      "critical": {
+        "earliest": -520,
+        "latest": -300
+      }
+    },
+    {
+      "book": "Malachi",
+      "traditional": {
+        "earliest": -440,
+        "latest": -400
+      },
+      "critical": {
+        "earliest": -470,
+        "latest": -420
+      }
+    },
+    {
+      "book": "Matthew",
+      "traditional": {
+        "earliest": 50,
+        "latest": 70
+      },
+      "critical": {
+        "earliest": 80,
+        "latest": 90
+      }
+    },
+    {
+      "book": "Mark",
+      "traditional": {
+        "earliest": 50,
+        "latest": 65
+      },
+      "critical": {
+        "earliest": 65,
+        "latest": 75
+      }
+    },
+    {
+      "book": "Luke",
+      "traditional": {
+        "earliest": 60,
+        "latest": 62
+      },
+      "critical": {
+        "earliest": 80,
+        "latest": 95
+      }
+    },
+    {
+      "book": "John",
+      "traditional": {
+        "earliest": 85,
+        "latest": 95
+      },
+      "critical": {
+        "earliest": 90,
+        "latest": 110
+      }
+    },
+    {
+      "book": "Acts",
+      "traditional": {
+        "earliest": 62,
+        "latest": 64
+      },
+      "critical": {
+        "earliest": 80,
+        "latest": 100
+      }
+    },
+    {
+      "book": "Romans",
+      "traditional": {
+        "earliest": 57,
+        "latest": 58
+      },
+      "critical": {
+        "earliest": 55,
+        "latest": 58
+      }
+    },
+    {
+      "book": "1 Corinthians",
+      "traditional": {
+        "earliest": 55,
+        "latest": 56
+      },
+      "critical": {
+        "earliest": 53,
+        "latest": 55
+      }
+    },
+    {
+      "book": "2 Corinthians",
+      "traditional": {
+        "earliest": 56,
+        "latest": 57
+      },
+      "critical": {
+        "earliest": 55,
+        "latest": 56
+      }
+    },
+    {
+      "book": "Galatians",
+      "traditional": {
+        "earliest": 48,
+        "latest": 49
+      },
+      "critical": {
+        "earliest": 48,
+        "latest": 55
+      }
+    },
+    {
+      "book": "Ephesians",
+      "traditional": {
+        "earliest": 60,
+        "latest": 62
+      },
+      "critical": {
+        "earliest": 80,
+        "latest": 100
+      }
+    },
+    {
+      "book": "Philippians",
+      "traditional": {
+        "earliest": 61,
+        "latest": 62
+      },
+      "critical": {
+        "earliest": 54,
+        "latest": 62
+      }
+    },
+    {
+      "book": "Colossians",
+      "traditional": {
+        "earliest": 60,
+        "latest": 62
+      },
+      "critical": {
+        "earliest": 60,
+        "latest": 80
+      }
+    },
+    {
+      "book": "1 Thessalonians",
+      "traditional": {
+        "earliest": 50,
+        "latest": 51
+      },
+      "critical": {
+        "earliest": 49,
+        "latest": 51
+      }
+    },
+    {
+      "book": "2 Thessalonians",
+      "traditional": {
+        "earliest": 51,
+        "latest": 52
+      },
+      "critical": {
+        "earliest": 50,
+        "latest": 100
+      }
+    },
+    {
+      "book": "1 Timothy",
+      "traditional": {
+        "earliest": 62,
+        "latest": 64
+      },
+      "critical": {
+        "earliest": 90,
+        "latest": 140
+      }
+    },
+    {
+      "book": "2 Timothy",
+      "traditional": {
+        "earliest": 66,
+        "latest": 67
+      },
+      "critical": {
+        "earliest": 90,
+        "latest": 140
+      }
+    },
+    {
+      "book": "Titus",
+      "traditional": {
+        "earliest": 63,
+        "latest": 65
+      },
+      "critical": {
+        "earliest": 90,
+        "latest": 140
+      }
+    },
+    {
+      "book": "Philemon",
+      "traditional": {
+        "earliest": 60,
+        "latest": 62
+      },
+      "critical": {
+        "earliest": 54,
+        "latest": 62
+      }
+    },
+    {
+      "book": "Hebrews",
+      "traditional": {
+        "earliest": 60,
+        "latest": 70
+      },
+      "critical": {
+        "earliest": 60,
+        "latest": 95
+      }
+    },
+    {
+      "book": "James",
+      "traditional": {
+        "earliest": 44,
+        "latest": 49
+      },
+      "critical": {
+        "earliest": 70,
+        "latest": 110
+      }
+    },
+    {
+      "book": "1 Peter",
+      "traditional": {
+        "earliest": 62,
+        "latest": 64
+      },
+      "critical": {
+        "earliest": 70,
+        "latest": 95
+      }
+    },
+    {
+      "book": "2 Peter",
+      "traditional": {
+        "earliest": 65,
+        "latest": 68
+      },
+      "critical": {
+        "earliest": 100,
+        "latest": 150
+      }
+    },
+    {
+      "book": "1 John",
+      "traditional": {
+        "earliest": 85,
+        "latest": 95
+      },
+      "critical": {
+        "earliest": 90,
+        "latest": 110
+      }
+    },
+    {
+      "book": "2 John",
+      "traditional": {
+        "earliest": 85,
+        "latest": 95
+      },
+      "critical": {
+        "earliest": 90,
+        "latest": 110
+      }
+    },
+    {
+      "book": "3 John",
+      "traditional": {
+        "earliest": 85,
+        "latest": 95
+      },
+      "critical": {
+        "earliest": 90,
+        "latest": 110
+      }
+    },
+    {
+      "book": "Jude",
+      "traditional": {
+        "earliest": 65,
+        "latest": 80
+      },
+      "critical": {
+        "earliest": 70,
+        "latest": 120
+      }
+    },
+    {
+      "book": "Revelation",
+      "traditional": {
+        "earliest": 90,
+        "latest": 95
+      },
+      "critical": {
+        "earliest": 90,
+        "latest": 96
+      }
+    }
+  ]
+}

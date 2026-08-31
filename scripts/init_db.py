@@ -17,6 +17,7 @@ ROOT = Path(__file__).resolve().parent.parent
 SCHEMA = ROOT / "db" / "schema.sql"
 REGISTRY = ROOT / "data" / "sources" / "sources.json"
 CANON = ROOT / "data" / "canon.json"
+DATES = ROOT / "data" / "composition_dates.json"
 DEFAULT_DB = ROOT / "data" / "studyhelp.db"
 
 SOURCE_FIELDS = [
@@ -67,6 +68,34 @@ def upsert_canon(conn):
     return len(books)
 
 
+def upsert_composition_dates(conn):
+    """Load one date range per book per scholarly tradition.
+
+    Several rows per book is the design: the spread between traditions is the
+    honest answer to "when was this written", and a single value would adopt one
+    school's position silently.
+    """
+    with open(DATES, encoding="utf-8") as fh:
+        doc = json.load(fh)
+
+    books = {name: bid for bid, name in conn.execute("SELECT id, name FROM book")}
+    rows = []
+    for entry in doc["books"]:
+        book_id = books[entry["book"]]
+        for tradition in doc["traditions"]:
+            span = entry[tradition]
+            rows.append((book_id, tradition, span["earliest"], span["latest"],
+                         f"dating-{tradition}"))
+
+    conn.executemany(
+        "INSERT INTO composition_date (book_id, tradition, earliest, latest, source_id) "
+        "VALUES (?, ?, ?, ?, ?) ON CONFLICT (book_id, tradition) DO UPDATE SET "
+        "earliest=excluded.earliest, latest=excluded.latest, source_id=excluded.source_id",
+        rows,
+    )
+    return len(rows)
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--db", default=str(DEFAULT_DB), help="path to the SQLite database")
@@ -80,11 +109,12 @@ def main():
         conn.executescript(SCHEMA.read_text(encoding="utf-8"))
         count = upsert_sources(conn, load_registry())
         books = upsert_canon(conn)
+        dates = upsert_composition_dates(conn)
         conn.commit()
     finally:
         conn.close()
 
-    print(f"Initialised {db_path} with {count} sources and {books} books.")
+    print(f"Initialised {db_path} with {count} sources, {books} books, {dates} date ranges.")
 
 
 if __name__ == "__main__":

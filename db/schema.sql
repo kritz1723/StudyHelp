@@ -59,12 +59,20 @@ CREATE TABLE IF NOT EXISTS book (
     name        TEXT NOT NULL UNIQUE,
     abbr        TEXT NOT NULL,
     chapters    INTEGER NOT NULL,
-    testament   TEXT NOT NULL CHECK (testament IN ('OT', 'NT')),
-    -- Composition date is contested and source-dependent; it drives the
-    -- chronology view, so it is stored as a range with its own attribution.
-    composed_earliest INTEGER,
-    composed_latest   INTEGER,
-    composition_source_id TEXT REFERENCES source(id)
+    testament   TEXT NOT NULL CHECK (testament IN ('OT', 'NT'))
+);
+
+-- When a book was written is contested, so a book has one date RANGE per
+-- scholarly tradition rather than a single date. Storing several rows per book
+-- is deliberate: the spread between traditions is the honest answer, and a
+-- point estimate would silently adopt one school's position.
+CREATE TABLE IF NOT EXISTS composition_date (
+    book_id   INTEGER NOT NULL REFERENCES book(id),
+    tradition TEXT NOT NULL,        -- traditional | critical
+    earliest  INTEGER NOT NULL,     -- year; negative for BCE
+    latest    INTEGER NOT NULL,
+    source_id TEXT NOT NULL REFERENCES source(id),
+    PRIMARY KEY (book_id, tradition)
 );
 
 -- Version-independent verse address. Verse divisions themselves vary between

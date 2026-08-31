@@ -54,6 +54,7 @@ def build(conn, out_dir):
         # appearance to a dictionary would be a straightforward misattribution.
         first_ref[lemma_id] = {
             "ref": f"{book} {chapter}:{verse}", "surface": surface, "source": token_source,
+            "book": book, "chapter": chapter, "verse": verse,
         }
 
     distribution = {}
@@ -63,6 +64,25 @@ def build(conn, out_dir):
         "WHERE t.lemma_id IS NOT NULL GROUP BY t.lemma_id, b.id ORDER BY t.lemma_id, b.id"
     ):
         distribution.setdefault(lemma_id, []).append([book, count])
+
+    # Composition-date ranges, one per tradition per book. These give a word's
+    # first appearance a YEAR as well as a reference -- as a range, because the
+    # date a book was written is contested.
+    dates = {}
+    for book, tradition, earliest, latest in conn.execute(
+        "SELECT b.name, d.tradition, d.earliest, d.latest FROM composition_date d "
+        "JOIN book b ON b.id = d.book_id"
+    ):
+        dates.setdefault(book, {})[tradition] = [earliest, latest]
+
+    versions = [
+        {"id": vid, "name": name, "language": language, "year": year, "era": era,
+         "from": translated_from}
+        for vid, name, language, year, era, translated_from in conn.execute(
+            "SELECT id, name, language, year, era, translated_from FROM version "
+            "ORDER BY CASE WHEN year IS NULL THEN 9999 ELSE year END"
+        )
+    ]
 
     senses = {}
     for lemma_id, gloss, definition, source_id, attested in conn.execute(
@@ -80,6 +100,11 @@ def build(conn, out_dir):
         count = counts.get(lemma_id, 0)
         slug = strongs or f"L{lemma_id}"
 
+        first = first_ref.get(lemma_id)
+        book_dates = dates.get(first["book"]) if first else None
+        if first and book_dates:
+            first["dates"] = book_dates
+
         index.append({
             "slug": slug,
             "lemma": lemma,
@@ -90,6 +115,15 @@ def build(conn, out_dir):
             # The first gloss doubles as the English search target: users arrive
             # with an English word, not a Strong's number.
             "gloss": (senses.get(lemma_id, [{}])[0].get("gloss") or "")[:120],
+            # Every recorded meaning is searchable, not just the first. A reader
+            # arriving with "propitiation" must reach the words behind it, and
+            # that term appears in a later sense than the headline gloss.
+            "terms": " ".join(x["gloss"] for x in senses.get(lemma_id, []))[:220],
+            # Sort keys for "earliest first appearance". A range cannot be sorted
+            # directly, so the declared rule is: sort by the EARLIEST bound of the
+            # selected tradition. The rule is stated in the UI rather than hidden.
+            "yt": book_dates["traditional"][0] if book_dates else None,
+            "yc": book_dates["critical"][0] if book_dates else None,
         })
 
         detail = {
@@ -100,7 +134,7 @@ def build(conn, out_dir):
             "lang": language,
             "count": count,
             "lexicon_source": source_id,
-            "first": first_ref.get(lemma_id),
+            "first": first,
             "distribution": sorted(distribution.get(lemma_id, []), key=lambda r: -r[1]),
             "senses": senses.get(lemma_id, []),
         }
@@ -110,9 +144,36 @@ def build(conn, out_dir):
         written += 1
 
     (out_dir / "index.json").write_text(
-        json.dumps({"lemmas": index, "sources": sources}, ensure_ascii=False, separators=(",", ":")),
+        json.dumps({"lemmas": index, "sources": sources, "versions": versions},
+                   ensure_ascii=False, separators=(",", ":")),
         encoding="utf-8",
     )
+
+    verse_dir = out_dir / "verse"
+    if verse_dir.exists():
+        shutil.rmtree(verse_dir)
+    verse_dir.mkdir()
+
+    wanted = {}
+    for entry in index:
+        pass
+    for lemma_id, first in first_ref.items():
+        wanted[(first["book"], first["chapter"], first["verse"])] = None
+
+    renderings = {}
+    for book, chapter, verse, version_id, text in conn.execute(
+        "SELECT b.name, v.chapter, v.verse, r.version_id, r.text FROM rendering r "
+        "JOIN verse v ON v.id = r.verse_id JOIN book b ON b.id = v.book_id"
+    ):
+        key = (book, chapter, verse)
+        if key in wanted:
+            renderings.setdefault(key, {})[version_id] = text
+
+    for (book, chapter, verse), texts in renderings.items():
+        slug = f"{book}.{chapter}.{verse}".replace(" ", "_")
+        (verse_dir / f"{slug}.json").write_text(
+            json.dumps(texts, ensure_ascii=False, separators=(",", ":")), encoding="utf-8"
+        )
 
     stats = {
         "lemmas": len(index),
@@ -122,6 +183,8 @@ def build(conn, out_dir):
             "SELECT COUNT(*) FROM token WHERE source_id='morphgnt-sblgnt'").fetchone()[0],
         "senses": conn.execute("SELECT COUNT(*) FROM sense").fetchone()[0],
         "sources": len(sources),
+        "renderings": conn.execute("SELECT COUNT(*) FROM rendering").fetchone()[0],
+        "versions": len(versions),
     }
     (out_dir / "stats.json").write_text(json.dumps(stats), encoding="utf-8")
 

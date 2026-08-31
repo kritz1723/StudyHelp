@@ -12,7 +12,10 @@
       "attribution": "Open Scriptures Hebrew Bible Project",
       "homepage": "https://hb.openscriptures.org/",
       "repository": "https://github.com/openscriptures/morphhb",
-      "formats": ["OSIS XML", "JSON"],
+      "formats": [
+        "OSIS XML",
+        "JSON"
+      ],
       "tier": 1,
       "priority": "critical",
       "verified": "2026-08-31",
@@ -28,7 +31,9 @@
       "attribution": "STEPBible.org / Tyndale House Cambridge",
       "homepage": "https://stepbible.github.io/STEPBible-Data/",
       "repository": "https://github.com/STEPBible/STEPBible-Data",
-      "formats": ["TSV"],
+      "formats": [
+        "TSV"
+      ],
       "tier": 1,
       "priority": "critical",
       "verified": "2026-08-31",
@@ -44,7 +49,9 @@
       "attribution": "James Tauber / MorphGNT; SBL Greek New Testament",
       "homepage": "http://morphgnt.org/sblgnt/",
       "repository": "https://github.com/morphgnt/sblgnt",
-      "formats": ["plain text (space-delimited)"],
+      "formats": [
+        "plain text (space-delimited)"
+      ],
       "tier": 1,
       "priority": "critical",
       "verified": "2026-08-31",
@@ -59,7 +66,10 @@
       "license": "Public domain (text); CC-BY-4.0 (XML markup)",
       "attribution": "Open Scriptures",
       "repository": "https://github.com/openscriptures/strongs",
-      "formats": ["XML", "JSON"],
+      "formats": [
+        "XML",
+        "JSON"
+      ],
       "tier": 1,
       "priority": "critical",
       "verified": "2026-08-31",
@@ -74,7 +84,9 @@
       "license": "Public domain (BDB text); CC-BY-4.0 (XML markup)",
       "attribution": "Open Scriptures",
       "repository": "https://github.com/openscriptures/HebrewLexicon",
-      "formats": ["XML"],
+      "formats": [
+        "XML"
+      ],
       "tier": 1,
       "priority": "high",
       "verified": "2026-08-31",
@@ -89,7 +101,9 @@
       "license": "Public domain (text); open licence on the digitisation",
       "attribution": "G. Abbott-Smith; digitised by the Translatable Exegetical Tools project",
       "repository": "https://github.com/translatable-exegetical-tools/Abbott-Smith",
-      "formats": ["XML"],
+      "formats": [
+        "XML"
+      ],
       "tier": 1,
       "priority": "high",
       "verified": "unverified",
@@ -104,7 +118,9 @@
       "license": "CC-BY-SA (Perseus digitisation); public domain (underlying text)",
       "attribution": "Perseus Digital Library, Tufts University",
       "homepage": "https://www.perseus.tufts.edu/",
-      "formats": ["XML (TEI)"],
+      "formats": [
+        "XML (TEI)"
+      ],
       "tier": 1,
       "priority": "high",
       "verified": "unverified",
@@ -119,7 +135,10 @@
       "license": "Public domain (1935 edition); check digitisation terms",
       "attribution": "Alfred Rahlfs; digitisation by Eliran Wong",
       "repository": "https://github.com/eliranwong/LXX-Rahlfs-1935",
-      "formats": ["SQLite", "text"],
+      "formats": [
+        "SQLite",
+        "text"
+      ],
       "tier": 1,
       "priority": "high",
       "verified": "2026-08-31",
@@ -134,7 +153,10 @@
       "license": "Public domain",
       "attribution": "H. B. Swete; digitisation by Eliran Wong / First1KGreek",
       "repository": "https://github.com/eliranwong/LXX-Swete-1930",
-      "formats": ["SQLite", "text"],
+      "formats": [
+        "SQLite",
+        "text"
+      ],
       "tier": 1,
       "priority": "medium",
       "verified": "2026-08-31",
@@ -151,7 +173,12 @@
       "license": "Public domain (dedicated 2023-04-30)",
       "attribution": "Berean Bible",
       "homepage": "https://berean.bible/downloads.htm",
-      "formats": ["USFM", "XLSX", "text", "ePub"],
+      "formats": [
+        "USFM",
+        "XLSX",
+        "text",
+        "ePub"
+      ],
       "tier": 1,
       "priority": "critical",
       "verified": "2026-08-31",
@@ -166,7 +193,11 @@
       "era": "early_modern",
       "description": "The reference point most users arrive with, and the anchor of the era-drift comparison.",
       "license": "Public domain (outside the UK; Crown copyright applies within the UK)",
-      "formats": ["JSON", "SQL", "XML"],
+      "formats": [
+        "JSON",
+        "SQL",
+        "XML"
+      ],
       "tier": 1,
       "priority": "critical",
       "verified": "unverified",
@@ -285,7 +316,11 @@
       "description": "Packaged public-domain translations (KJV, ASV, YLT, Darby, WEB and others) in ready-to-load SQL/JSON.",
       "license": "Varies by contained translation; packaging is open",
       "repository": "https://github.com/scrollmapper/bible_databases",
-      "formats": ["SQL", "JSON", "CSV"],
+      "formats": [
+        "SQL",
+        "JSON",
+        "CSV"
+      ],
       "tier": 1,
       "priority": "high",
       "verified": "unverified",
@@ -302,6 +337,52 @@
       "priority": "reference",
       "verified": "2026-08-31",
       "notes": "Not a data source. Use to find candidates, then register them here individually with their own licence."
+    },
+    {
+      "id": "dating-traditional",
+      "name": "Traditional dating (approximate consensus ranges)",
+      "kind": "dating_scheme",
+      "description": "Composition-date ranges following traditional attributions of authorship.",
+      "license": "n/a (compiled orientation data, not a reproduced work)",
+      "tier": "n/a",
+      "priority": "high",
+      "verified": "unverified",
+      "notes": "Approximate ranges compiled for orientation. Needs review against named reference works before being presented as scholarship."
+    },
+    {
+      "id": "dating-critical",
+      "name": "Critical dating (approximate consensus ranges)",
+      "kind": "dating_scheme",
+      "description": "Composition-date ranges following mainstream historical-critical scholarship.",
+      "license": "n/a (compiled orientation data, not a reproduced work)",
+      "tier": "n/a",
+      "priority": "high",
+      "verified": "unverified",
+      "notes": "Approximate ranges compiled for orientation. Needs review against named reference works before being presented as scholarship."
+    },
+    {
+      "id": "akjv",
+      "name": "American King James Version",
+      "kind": "translation",
+      "language": "en",
+      "year": 1999,
+      "era": "contemporary",
+      "license": "Public domain",
+      "tier": 1,
+      "priority": "low",
+      "verified": "unverified",
+      "notes": "Modernised KJV wording; useful as a spelling-normalised bridge to the 1769 text."
+    },
+    {
+      "id": "nheb",
+      "name": "New Heart English Bible",
+      "kind": "translation",
+      "language": "en",
+      "era": "contemporary",
+      "license": "Public domain",
+      "tier": 1,
+      "priority": "low",
+      "verified": "unverified"
     }
   ]
 }
