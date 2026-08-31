@@ -402,6 +402,20 @@
           "path": "translations/NHEB.json"
         }
       ]
+    },
+    {
+      "source_id": "lxx-swete-1930",
+      "note": "Swete only. LXX-Rahlfs-1935 is deliberately NOT fetched: NonCommercial licence over CCAT data requiring a signed declaration.",
+      "files": [
+        {
+          "url": "https://raw.githubusercontent.com/eliranwong/LXX-Swete-1930/master/00-Swete_versification.csv",
+          "path": "lxx/00-Swete_versification.csv"
+        },
+        {
+          "url": "https://raw.githubusercontent.com/eliranwong/LXX-Swete-1930/master/01-Swete_word_with_punctuations.csv",
+          "path": "lxx/01-Swete_word_with_punctuations.csv"
+        }
+      ]
     }
   ]
 }

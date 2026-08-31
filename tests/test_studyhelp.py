@@ -65,6 +65,21 @@ class RegistryTests(unittest.TestCase):
             self.assertTrue(src.get("license"), f"{src['id']} has no licence")
             self.assertTrue(src.get("name"), f"{src['id']} has no name")
 
+    def test_no_noncommercial_source_is_fetched(self):
+        """A NonCommercial or declaration-gated source must never be in the fetch list.
+
+        LXX-Rahlfs carries exactly the tagging this project wants, which is why
+        this needs to be a test and not a good intention.
+        """
+        blocked = {
+            s["id"] for s in self.sources
+            if "NC" in s.get("license", "") or "declaration" in s.get("license", "")
+        }
+        self.assertIn("lxx-rahlfs-1935", blocked, "expected Rahlfs to be marked blocked")
+        for entry in self.downloads:
+            self.assertNotIn(entry["source_id"], blocked,
+                             f"{entry['source_id']} is licence-blocked but is in downloads")
+
     def test_source_ids_unique(self):
         ids = [s["id"] for s in self.sources]
         self.assertEqual(len(ids), len(set(ids)))
@@ -275,6 +290,23 @@ class IngestedCorpusTests(unittest.TestCase):
         if not row:
             self.skipTest("translations not ingested")
         self.assertNotEqual(row[0], row[1])
+
+    def test_septuagint_loaded(self):
+        count = self.conn.execute(
+            "SELECT COUNT(*) FROM rendering WHERE version_id = 'lxx-swete'"
+        ).fetchone()[0]
+        if not count:
+            self.skipTest("LXX not ingested")
+        self.assertGreater(count, 20_000)
+
+    def test_septuagint_keeps_its_own_versification(self):
+        # LXX numbering differs from the Hebrew, so its verses must not be filed
+        # under English versification -- that would silently misalign the Psalms.
+        rows = self.conn.execute(
+            "SELECT COUNT(*) FROM rendering r JOIN verse v ON v.id = r.verse_id "
+            "WHERE r.version_id = 'lxx-swete' AND v.versification != 'lxx'"
+        ).fetchone()[0]
+        self.assertEqual(rows, 0)
 
     def test_every_token_traces_to_a_registered_source(self):
         orphans = self.conn.execute(

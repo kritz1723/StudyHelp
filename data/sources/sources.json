@@ -132,17 +132,17 @@
       "kind": "ancient_version",
       "language": "grc",
       "description": "Greek OT with morphology tagging. The critical bridge showing how Hebrew lemmas were rendered into Greek centuries before the NT.",
-      "license": "Public domain (1935 edition); check digitisation terms",
+      "license": "CC BY-NC-SA 4.0, over CCAT data requiring a signed user declaration",
       "attribution": "Alfred Rahlfs; digitisation by Eliran Wong",
       "repository": "https://github.com/eliranwong/LXX-Rahlfs-1935",
       "formats": [
         "SQLite",
         "text"
       ],
-      "tier": 1,
-      "priority": "high",
+      "tier": 3,
+      "priority": "blocked",
       "verified": "2026-08-31",
-      "notes": "High value: the LXX is the single best dataset for demonstrating meaning shift across languages and eras."
+      "notes": "UNUSABLE under this project's open-source-only rule. The packaging is NonCommercial, and the underlying CATSS/CCAT text requires agreeing to a user declaration before download. It carries the morphology and Strong's tags the transmission chain needs, which makes this the most costly licence problem in the project. Do not fetch."
     },
     {
       "id": "lxx-swete-1930",
@@ -150,17 +150,16 @@
       "kind": "ancient_version",
       "language": "grc",
       "description": "Alternative LXX edition, unambiguously public domain.",
-      "license": "Public domain",
+      "license": "GPL-3.0 (repository); public domain (Swete's text, Cambridge 1909-1930)",
       "attribution": "H. B. Swete; digitisation by Eliran Wong / First1KGreek",
       "repository": "https://github.com/eliranwong/LXX-Swete-1930",
       "formats": [
-        "SQLite",
-        "text"
+        "CSV"
       ],
       "tier": 1,
-      "priority": "medium",
+      "priority": "critical",
       "verified": "2026-08-31",
-      "notes": "Safer licence fallback if Rahlfs digitisation terms prove restrictive."
+      "notes": "Usable. Word list plus versification index, with NO lemma or morphology tagging in the published files -- so it gives the LXX text but cannot yet carry lemma-level bridging between Hebrew and Greek."
     },
     {
       "id": "bsb",
@@ -383,6 +382,20 @@
       "tier": 1,
       "priority": "low",
       "verified": "unverified"
+    },
+    {
+      "id": "openscriptures-lxx-lemmas",
+      "name": "Open Scriptures Septuagint Lemmas",
+      "kind": "lexicon",
+      "language": "grc",
+      "description": "Corrected and restructured lemmas for the Septuagint.",
+      "license": "CC-BY-4.0",
+      "attribution": "Open Scriptures Septuagint Project",
+      "repository": "https://github.com/openscriptures/GreekResources",
+      "tier": 2,
+      "priority": "high",
+      "verified": "2026-08-31",
+      "notes": "The lemmas are openly licensed, but they are keyed to the CCAT text, which is not. Openly licensed keys into a closed text do not by themselves unlock lemma-level LXX bridging."
     }
   ]
 }
