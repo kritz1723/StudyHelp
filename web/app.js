@@ -222,6 +222,24 @@ async function showLemma(slug) {
   els.sorter.hidden = true;
   els.about.hidden = true;
   els.detail.hidden = false;
+  const renderings = data.renderings || {};
+  const renderedIn = Object.keys(renderings)
+    .map((id) => {
+      const version = VERSIONS.find((v) => v.id === id);
+      const entries = renderings[id];
+      const total = entries.reduce((n, [, c]) => n + c, 0) || 1;
+      return `
+        <div class="rendered">
+          <p class="which">${esc(version ? version.name : id)}</p>
+          <div class="chips">${entries.map(([text, count]) => `
+            <span class="chip"><span class="w">${esc(text)}</span>
+              <span class="c">${count}</span></span>`).join('')}</div>
+          ${entries.length > 1 ? `<p class="note">${entries.length} different
+             rendering${entries.length === 1 ? '' : 's'}; the most common covers
+             ${Math.round((entries[0][1] / total) * 100)}% of its uses.</p>` : ''}
+        </div>`;
+    }).join('');
+
   els.detail.innerHTML = `
     <button class="back" id="back">← back</button>
     <h2 class="headword">${esc(data.lemma)}</h2>
@@ -245,6 +263,11 @@ async function showLemma(slug) {
     ${data.lang !== 'en' ? `<p class="note">Counts come from the tagged Hebrew and Greek,
        which cover the 66-book canon only. The deuterocanonical books can be read here
        but are not yet counted.</p>` : ''}
+
+    ${renderedIn ? `<h3>What it became</h3>${renderedIn}
+       <p class="note">One word in the original, and the words chosen for it.
+          Where a single original word splits into many, the choice is the
+          translator's — which is exactly what a word study is for.</p>` : ''}
 
     <h3>What it has meant</h3>
     ${senses}`;

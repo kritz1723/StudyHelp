@@ -245,6 +245,12 @@ class GreekNormalisationTests(unittest.TestCase):
     def test_final_sigma_folds(self):
         self.assertEqual(ingest.normalize_greek("λόγος"), ingest.normalize_greek("λογοσ"))
 
+    def test_word_key_ignores_punctuation(self):
+        # MorphGNT keeps punctuation on the word, MACULA strips it. Comparing
+        # them literally rejected a fifth of all real matches.
+        self.assertEqual(ingest.word_key("Ἀβραάμ."), ingest.word_key("Ἀβραάμ"))
+        self.assertEqual(ingest.word_key("Ἰσαάκ,"), ingest.word_key("Ἰσαάκ"))
+
     def test_distinct_words_stay_distinct(self):
         self.assertNotEqual(ingest.normalize_greek("ἀγάπη"), ingest.normalize_greek("φιλία"))
 
@@ -387,6 +393,42 @@ class IngestedCorpusTests(unittest.TestCase):
             "WHERE r.version_id = 'lxx-swete' AND v.versification != 'lxx'"
         ).fetchone()[0]
         self.assertEqual(rows, 0)
+
+    def test_greek_tokens_carry_explicit_strongs(self):
+        """MACULA supplies a real Strong's number per word.
+
+        Linking used to be a diacritic-folding heuristic that reached 98.5%.
+        If this regresses, the guesswork has quietly come back.
+        """
+        total, unlinked = self.conn.execute(
+            "SELECT COUNT(*), SUM(CASE WHEN l.strongs IS NULL THEN 1 ELSE 0 END) "
+            "FROM token t LEFT JOIN lemma l ON l.id = t.lemma_id "
+            "WHERE t.source_id = 'morphgnt-sblgnt'"
+        ).fetchone()
+        if not total:
+            self.skipTest("morphgnt not ingested")
+        self.assertLess((unlinked or 0) / total, 0.001)
+
+    def test_glosses_loaded_for_multiple_languages(self):
+        rows = dict(self.conn.execute(
+            "SELECT v.language, COUNT(*) FROM gloss g JOIN version v ON v.id = g.version_id "
+            "GROUP BY v.language"
+        ))
+        if not rows:
+            self.skipTest("glosses not ingested")
+        self.assertGreater(rows.get("en", 0), 100_000)
+        self.assertGreater(rows.get("zh", 0), 50_000, "no Mandarin glosses loaded")
+
+    def test_a_word_shows_several_renderings(self):
+        # The point of the drift view: one original word, many English choices.
+        rows = self.conn.execute(
+            "SELECT COUNT(DISTINCT g.text) FROM gloss g JOIN token t ON t.id = g.token_id "
+            "JOIN lemma l ON l.id = t.lemma_id "
+            "WHERE l.strongs = 'G26' AND g.version_id = 'berean-interlinear'"
+        ).fetchone()[0]
+        if not rows:
+            self.skipTest("glosses not ingested")
+        self.assertGreater(rows, 1)
 
     def test_every_token_traces_to_a_registered_source(self):
         orphans = self.conn.execute(
