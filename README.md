@@ -80,8 +80,8 @@ Fetched corpora and the generated database are gitignored — the *registry* and
 | --- | --- |
 | Hebrew tokens (OSHB / WLC) | 306,785 |
 | Greek tokens (MorphGNT / SBLGNT) | 137,554 |
-| Translated verses | 280,600 across 9 editions |
-| Septuagint verses (Swete) | 22,955 |
+| Translated verses | 292,186 across 9 editions |
+| Septuagint verses (Swete) | 28,182 |
 | Lemmas | 14,686 |
 | Attested senses | 28,367 |
 | Composition-date ranges | 132 (66 books × 2 traditions) |
@@ -93,6 +93,18 @@ Translations span Wycliffe (1395), Tyndale (1526), the KJV (1769), Young's Liter
 Spot-checked against independently known counts: *elohim* (H430) 2,600 occurrences
 first at Genesis 1:1; *agape* (G26) 116 occurrences first at Matthew 24:12, clustering
 in 1 John. These are asserted in the test suite so parser regressions surface fast.
+
+## Canon
+
+Which books count as scripture is a confessional question, so it is data rather than a
+hardcoded assumption. Three canons are defined — Protestant (66 books), Catholic (76) and
+Orthodox (82) — and the wider ones add to the 66 rather than replacing them, so switching
+never loses a book. Before this, ingesting Wycliffe, the Vulgate or the Septuagint
+silently discarded every book outside the 66.
+
+Note the honest limit: no freely licensed word-by-word tagging covers the
+deuterocanonical books, so a wider canon currently changes what can be *read*, not what
+can be *searched*.
 
 ## Dating
 

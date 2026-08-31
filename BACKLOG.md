@@ -106,10 +106,14 @@ recorded here rather than dropped, so the trade-off stays visible.
 
 - [x] **Translation is optional.** A reader can choose "original only", and the choice
       is remembered.
-- [ ] **Deuterocanonical books.** Wycliffe and the Vulgate ship Tobit, Judith, Sirach,
-      Baruch, Maccabees and others; ingestion drops them because the canon table holds
-      only the 66-book Protestant canon. This silently excludes Catholic and Orthodox
-      readers and should be fixed by making the canon itself configurable.
+- [x] **Configurable canon.** Which books count as scripture is now data, not a
+      hardcoded assumption. Protestant (66), Catholic (76) and Orthodox (82) canons are
+      defined and selectable. Wycliffe and the Vulgate gained ~5,800 verses each and the
+      Septuagint ~5,200 that were previously discarded in silence.
+- [ ] **No tagged text covers the deuterocanonical books.** They can now be READ but not
+      SEARCHED: OSHB and MorphGNT cover the 66-book canon only, so choosing a wider canon
+      changes what is readable, not what is countable. The site says so plainly. Fixing
+      it needs tagged Greek for those books — the same LXX tagging problem below.
 - [ ] **Right-to-left rendering.** Hebrew is already on screen; proper bidi handling is
       needed before any Arabic, Persian or Urdu translation is added.
 - [ ] **Indic and CJK scripts.** Line height, shaping and font fallbacks will need work

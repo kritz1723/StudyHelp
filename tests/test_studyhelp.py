@@ -25,28 +25,49 @@ RAW = ROOT / "data" / "raw"
 
 class CanonTests(unittest.TestCase):
     def setUp(self):
-        self.books = json.loads((ROOT / "data" / "canon.json").read_text())["books"]
+        doc = json.loads((ROOT / "data" / "canon.json").read_text())
+        self.books = doc["books"]
+        self.canons = doc["canons"]
+        self.by_id = {b["id"]: b for b in self.books}
 
-    def test_sixty_six_books(self):
-        self.assertEqual(len(self.books), 66)
+    def protestant(self):
+        return [self.by_id[i] for i in self.canons["protestant"]["books"]]
 
-    def test_chapter_total(self):
-        # The Protestant canon has 1189 chapters. A wrong chapter count in any
-        # single book shows up here rather than as a silent gap in a reading view.
-        self.assertEqual(sum(b["chapters"] for b in self.books), 1189)
+    def test_protestant_canon_is_sixty_six_books(self):
+        self.assertEqual(len(self.protestant()), 66)
 
-    def test_ids_are_canonical_order(self):
-        self.assertEqual([b["id"] for b in self.books], list(range(1, 67)))
-        self.assertEqual(self.books[0]["name"], "Genesis")
-        self.assertEqual(self.books[-1]["name"], "Revelation")
+    def test_protestant_chapter_total(self):
+        # 1189 chapters. A wrong chapter count in any single book shows up here
+        # rather than as a silent gap in a reading view.
+        self.assertEqual(sum(b["chapters"] for b in self.protestant()), 1189)
+
+    def test_protestant_ids_are_canonical_order(self):
+        self.assertEqual([b["id"] for b in self.protestant()], list(range(1, 67)))
+        self.assertEqual(self.protestant()[0]["name"], "Genesis")
+        self.assertEqual(self.protestant()[-1]["name"], "Revelation")
 
     def test_testament_split(self):
-        self.assertEqual(sum(b["testament"] == "OT" for b in self.books), 39)
-        self.assertEqual(sum(b["testament"] == "NT" for b in self.books), 27)
+        protestant = self.protestant()
+        self.assertEqual(sum(b["testament"] == "OT" for b in protestant), 39)
+        self.assertEqual(sum(b["testament"] == "NT" for b in protestant), 27)
 
     def test_names_and_abbrs_unique(self):
-        self.assertEqual(len({b["name"] for b in self.books}), 66)
-        self.assertEqual(len({b["abbr"] for b in self.books}), 66)
+        self.assertEqual(len({b["name"] for b in self.books}), len(self.books))
+        self.assertEqual(len({b["abbr"] for b in self.books}), len(self.books))
+
+    def test_wider_canons_contain_the_protestant_one(self):
+        # Catholic and Orthodox canons add to the 66 rather than replacing them,
+        # so a reader switching canon never loses a book.
+        protestant = set(self.canons["protestant"]["books"])
+        for name in ("catholic", "orthodox"):
+            self.assertTrue(protestant.issubset(set(self.canons[name]["books"])), name)
+
+    def test_every_canon_book_exists_and_is_documented(self):
+        known = set(self.by_id)
+        for name, meta in self.canons.items():
+            self.assertTrue(meta.get("label"), name)
+            self.assertTrue(meta.get("note"), name)
+            self.assertTrue(set(meta["books"]).issubset(known), name)
 
 
 class RegistryTests(unittest.TestCase):
@@ -111,8 +132,22 @@ class SchemaTests(unittest.TestCase):
 
     def test_canon_loads(self):
         conn = sqlite3.connect(self.db)
-        self.assertEqual(conn.execute("SELECT COUNT(*) FROM book").fetchone()[0], 66)
-        self.assertEqual(conn.execute("SELECT SUM(chapters) FROM book").fetchone()[0], 1189)
+        count, chapters = conn.execute(
+            "SELECT COUNT(*), SUM(b.chapters) FROM canon_membership m "
+            "JOIN book b ON b.id = m.book_id WHERE m.canon = 'protestant'"
+        ).fetchone()
+        self.assertEqual(count, 66)
+        self.assertEqual(chapters, 1189)
+        conn.close()
+
+    def test_all_three_canons_load(self):
+        conn = sqlite3.connect(self.db)
+        sizes = dict(conn.execute(
+            "SELECT canon, COUNT(*) FROM canon_membership GROUP BY canon"
+        ))
+        self.assertEqual(sizes["protestant"], 66)
+        self.assertGreater(sizes["catholic"], sizes["protestant"])
+        self.assertGreater(sizes["orthodox"], sizes["catholic"])
         conn.close()
 
     def test_content_tables_carry_provenance(self):
@@ -135,11 +170,14 @@ class SchemaTests(unittest.TestCase):
         conn.close()
 
     def test_init_db_is_rerunnable(self):
+        # Re-running must not duplicate rows; the count is whatever the canon
+        # file holds, so this asserts idempotency rather than a canon size.
         conn = sqlite3.connect(self.db)
+        before = conn.execute("SELECT COUNT(*) FROM book").fetchone()[0]
         init_db.upsert_sources(conn, init_db.load_registry())
         init_db.upsert_canon(conn)
         conn.commit()
-        self.assertEqual(conn.execute("SELECT COUNT(*) FROM book").fetchone()[0], 66)
+        self.assertEqual(conn.execute("SELECT COUNT(*) FROM book").fetchone()[0], before)
         conn.close()
 
 
@@ -147,10 +185,10 @@ class CompositionDateTests(unittest.TestCase):
     def setUp(self):
         self.doc = json.loads((ROOT / "data" / "composition_dates.json").read_text())
 
-    def test_every_canon_book_is_dated(self):
-        canon = {b["name"] for b in json.loads((ROOT / "data" / "canon.json").read_text())["books"]}
+    def test_every_book_is_dated(self):
+        books = {b["name"] for b in json.loads((ROOT / "data" / "canon.json").read_text())["books"]}
         dated = {e["book"] for e in self.doc["books"]}
-        self.assertEqual(canon, dated)
+        self.assertEqual(books, dated)
 
     def test_ranges_are_ordered_and_never_points_only(self):
         for entry in self.doc["books"]:
@@ -254,10 +292,24 @@ class IngestedCorpusTests(unittest.TestCase):
         self.assertTrue(135_000 <= count <= 140_000, count)
 
     def test_composition_dates_loaded_for_every_book(self):
-        rows = self.conn.execute(
-            "SELECT COUNT(DISTINCT book_id) FROM composition_date"
+        books, dated = self.conn.execute(
+            "SELECT (SELECT COUNT(*) FROM book), COUNT(DISTINCT book_id) FROM composition_date"
+        ).fetchone()
+        self.assertEqual(dated, books)
+
+    def test_deuterocanonical_books_are_not_dropped(self):
+        """Wycliffe, the Vulgate and the LXX all carry books beyond the 66.
+
+        Before the canon became configurable these were silently discarded,
+        which quietly excluded Catholic and Orthodox readers.
+        """
+        count = self.conn.execute(
+            "SELECT COUNT(*) FROM rendering r JOIN verse v ON v.id = r.verse_id "
+            "JOIN book b ON b.id = v.book_id WHERE b.name = 'Sirach'"
         ).fetchone()[0]
-        self.assertEqual(rows, 66)
+        if not self.conn.execute("SELECT COUNT(*) FROM rendering").fetchone()[0]:
+            self.skipTest("translations not ingested")
+        self.assertGreater(count, 0, "Sirach loaded from no source")
 
     def test_kjv_verse_count(self):
         count = self.conn.execute(

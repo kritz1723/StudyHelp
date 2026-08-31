@@ -182,6 +182,17 @@ def build(conn, out_dir):
             json.dumps(texts, ensure_ascii=False, separators=(",", ":")), encoding="utf-8"
         )
 
+    canons = {}
+    for name, book, ordering in conn.execute(
+        "SELECT m.canon, b.name, m.ordering FROM canon_membership m "
+        "JOIN book b ON b.id = m.book_id ORDER BY m.canon, m.ordering"
+    ):
+        canons.setdefault(name, []).append(book)
+
+    (out_dir / "canons.json").write_text(
+        json.dumps(canons, ensure_ascii=False, separators=(",", ":")), encoding="utf-8"
+    )
+
     stats = {
         "lemmas": len(index),
         "hebrew_tokens": conn.execute(
@@ -192,6 +203,7 @@ def build(conn, out_dir):
         "sources": len(sources),
         "renderings": conn.execute("SELECT COUNT(*) FROM rendering").fetchone()[0],
         "versions": len(versions),
+        "canons": {name: len(books) for name, books in canons.items()},
     }
     (out_dir / "stats.json").write_text(json.dumps(stats), encoding="utf-8")
 

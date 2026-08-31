@@ -9,6 +9,7 @@ const els = {
   sorter: document.getElementById('sorter'),
   sort: document.getElementById('sort'),
   tradition: document.getElementById('tradition'),
+  canon: document.getElementById('canon'),
   results: document.getElementById('results'),
   detail: document.getElementById('detail'),
   about: document.getElementById('about'),
@@ -19,6 +20,7 @@ const els = {
 let INDEX = [];
 let SOURCES = {};
 let VERSIONS = [];
+let CANONS = {};
 let lastMatches = [];
 
 const LANG = { hbo: 'Hebrew', arc: 'Aramaic', grc: 'Greek', en: 'English', la: 'Latin' };
@@ -67,10 +69,12 @@ const TRADITION_LABEL = { traditional: 'Traditional dating', critical: 'Critical
 
 async function boot() {
   try {
-    const [index, stats] = await Promise.all([
+    const [index, stats, canons] = await Promise.all([
       fetch('index.json').then((r) => r.json()),
       fetch('stats.json').then((r) => r.json()).catch(() => null),
+      fetch('canons.json').then((r) => r.json()).catch(() => ({})),
     ]);
+    CANONS = canons;
     INDEX = index.lemmas;
     SOURCES = index.sources;
     VERSIONS = index.versions || [];
@@ -87,6 +91,7 @@ async function boot() {
     }
     els.hint.textContent = 'Search in English, in transliteration, or in the original script.';
     els.tradition.value = store.get('tradition', 'traditional');
+    els.canon.value = store.get('canon', 'protestant');
     routeFromHash();
   } catch (err) {
     els.hint.textContent = 'The index could not be loaded. The site may still be building.';
@@ -173,8 +178,14 @@ function renderResults(matches, query) {
 async function showLemma(slug) {
   const data = await fetch(`lemma/${encodeURIComponent(slug)}.json`).then((r) => r.json());
 
-  const peak = data.distribution.length ? data.distribution[0][1] : 1;
-  const dist = data.distribution.map(([book, count]) => `
+  const inCanon = new Set(CANONS[els.canon.value] || []);
+  const distribution = inCanon.size
+    ? data.distribution.filter(([book]) => inCanon.has(book))
+    : data.distribution;
+  const hidden = data.distribution.length - distribution.length;
+
+  const peak = distribution.length ? distribution[0][1] : 1;
+  const dist = distribution.map(([book, count]) => `
     <span class="book">${esc(book)}</span>
     <span class="ct">${count}</span>
     <span class="track" style="width:${Math.max(2, (count / peak) * 100)}%"></span>`).join('');
@@ -227,7 +238,13 @@ async function showLemma(slug) {
       <p class="text" id="verse-text"></p>
     </div>
 
-    ${data.distribution.length ? `<h3>Where it gathers</h3><div class="dist">${dist}</div>` : ''}
+    ${distribution.length ? `<h3>Where it gathers</h3><div class="dist">${dist}</div>` : ''}
+    ${hidden > 0 ? `<p class="note">${hidden} further book${hidden === 1 ? '' : 's'}
+       carrying this word ${hidden === 1 ? 'is' : 'are'} outside the
+       ${esc(els.canon.value)} canon and not shown.</p>` : ''}
+    ${data.lang !== 'en' ? `<p class="note">Counts come from the tagged Hebrew and Greek,
+       which cover the 66-book canon only. The deuterocanonical books can be read here
+       but are not yet counted.</p>` : ''}
 
     <h3>What it has meant</h3>
     ${senses}`;
@@ -321,6 +338,10 @@ els.q.addEventListener('input', () => {
 
 els.sort.addEventListener('change', () => {
   if (lastMatches.length) renderResults(lastMatches, els.q.value);
+});
+els.canon.addEventListener('change', () => {
+  store.set('canon', els.canon.value);
+  routeFromHash();
 });
 els.tradition.addEventListener('change', () => {
   store.set('tradition', els.tradition.value);

@@ -62,6 +62,17 @@ CREATE TABLE IF NOT EXISTS book (
     testament   TEXT NOT NULL CHECK (testament IN ('OT', 'NT'))
 );
 
+-- Which books count as scripture is a confessional question, not a fact, so
+-- canon membership is data. The 66-book Protestant canon is one row set among
+-- several rather than a hardcoded assumption; without this, ingesting Wycliffe,
+-- the Vulgate or the Septuagint silently discards books those traditions read.
+CREATE TABLE IF NOT EXISTS canon_membership (
+    canon    TEXT NOT NULL,     -- protestant | catholic | orthodox
+    book_id  INTEGER NOT NULL REFERENCES book(id),
+    ordering INTEGER NOT NULL,
+    PRIMARY KEY (canon, book_id)
+);
+
 -- When a book was written is contested, so a book has one date RANGE per
 -- scholarly tradition rather than a single date. Storing several rows per book
 -- is deliberate: the spread between traditions is the honest answer, and a

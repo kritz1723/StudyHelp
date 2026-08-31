@@ -1,5 +1,5 @@
 {
-  "$comment": "Approximate composition-date ranges per book, given for two broad scholarly traditions. Ranges, never points: the date a biblical book was written is genuinely contested, and presenting a single year would smuggle one school's position into an app whose premise is not doing that. The disagreement between the two columns is information, not noise. Years are negative for BCE. These are approximate consensus ranges compiled for orientation, not citations of a specific reference work -- see BACKLOG.md for the review item.",
+  "$comment": "Approximate composition-date ranges per book, given for two broad scholarly traditions. Ranges, never points: the date a biblical book was written is genuinely contested, and presenting a single year would smuggle one school's position into an app whose premise is not doing that. The disagreement between the two columns is information, not noise. Years are negative for BCE. These are approximate consensus ranges compiled for orientation, not citations of a specific reference work -- see BACKLOG.md for the review item. For the deuterocanonical books the two traditions carry the same range: the dispute that separates them concerns the Hebrew canon, and inventing a disagreement here would be as misleading as hiding one elsewhere.",
   "schema_version": 1,
   "traditions": {
     "traditional": {
@@ -736,6 +736,182 @@
       "critical": {
         "earliest": 90,
         "latest": 96
+      }
+    },
+    {
+      "book": "Tobit",
+      "traditional": {
+        "earliest": -225,
+        "latest": -175
+      },
+      "critical": {
+        "earliest": -225,
+        "latest": -175
+      }
+    },
+    {
+      "book": "Judith",
+      "traditional": {
+        "earliest": -150,
+        "latest": -100
+      },
+      "critical": {
+        "earliest": -150,
+        "latest": -100
+      }
+    },
+    {
+      "book": "Wisdom",
+      "traditional": {
+        "earliest": -100,
+        "latest": -30
+      },
+      "critical": {
+        "earliest": -100,
+        "latest": -30
+      }
+    },
+    {
+      "book": "Sirach",
+      "traditional": {
+        "earliest": -195,
+        "latest": -175
+      },
+      "critical": {
+        "earliest": -195,
+        "latest": -175
+      }
+    },
+    {
+      "book": "Baruch",
+      "traditional": {
+        "earliest": -200,
+        "latest": -100
+      },
+      "critical": {
+        "earliest": -200,
+        "latest": -100
+      }
+    },
+    {
+      "book": "1 Maccabees",
+      "traditional": {
+        "earliest": -110,
+        "latest": -100
+      },
+      "critical": {
+        "earliest": -110,
+        "latest": -100
+      }
+    },
+    {
+      "book": "2 Maccabees",
+      "traditional": {
+        "earliest": -124,
+        "latest": -63
+      },
+      "critical": {
+        "earliest": -124,
+        "latest": -63
+      }
+    },
+    {
+      "book": "1 Esdras",
+      "traditional": {
+        "earliest": -200,
+        "latest": -100
+      },
+      "critical": {
+        "earliest": -200,
+        "latest": -100
+      }
+    },
+    {
+      "book": "Prayer of Manasseh",
+      "traditional": {
+        "earliest": -200,
+        "latest": 50
+      },
+      "critical": {
+        "earliest": -200,
+        "latest": 50
+      }
+    },
+    {
+      "book": "Psalm 151",
+      "traditional": {
+        "earliest": -300,
+        "latest": -100
+      },
+      "critical": {
+        "earliest": -300,
+        "latest": -100
+      }
+    },
+    {
+      "book": "3 Maccabees",
+      "traditional": {
+        "earliest": -100,
+        "latest": -1
+      },
+      "critical": {
+        "earliest": -100,
+        "latest": -1
+      }
+    },
+    {
+      "book": "4 Maccabees",
+      "traditional": {
+        "earliest": 1,
+        "latest": 100
+      },
+      "critical": {
+        "earliest": 1,
+        "latest": 100
+      }
+    },
+    {
+      "book": "Susanna",
+      "traditional": {
+        "earliest": -200,
+        "latest": -100
+      },
+      "critical": {
+        "earliest": -200,
+        "latest": -100
+      }
+    },
+    {
+      "book": "Bel and the Dragon",
+      "traditional": {
+        "earliest": -200,
+        "latest": -100
+      },
+      "critical": {
+        "earliest": -200,
+        "latest": -100
+      }
+    },
+    {
+      "book": "Prayer of Azariah",
+      "traditional": {
+        "earliest": -200,
+        "latest": -100
+      },
+      "critical": {
+        "earliest": -200,
+        "latest": -100
+      }
+    },
+    {
+      "book": "2 Esdras",
+      "traditional": {
+        "earliest": 90,
+        "latest": 120
+      },
+      "critical": {
+        "earliest": 90,
+        "latest": 120
       }
     }
   ]

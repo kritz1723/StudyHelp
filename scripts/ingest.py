@@ -280,6 +280,11 @@ class Ingestor:
             "Psalm": "Psalms", "Song of Songs": "Song of Solomon",
             "Canticles": "Song of Solomon", "Revelation of John": "Revelation",
             "The Revelation": "Revelation", "Acts of the Apostles": "Acts",
+            # Deuterocanonical books, carried by Wycliffe and the Vulgate.
+            "Prayer of Manasses": "Prayer of Manasseh",
+            "Additional Psalm": "Psalm 151",
+            "Ecclesiasticus": "Sirach",
+            "Wisdom of Solomon": "Wisdom",
         }
         # Numbered books are packaged with Roman numerals ("I Corinthians").
         romans = {"I": "1", "II": "2", "III": "3"}
@@ -361,10 +366,16 @@ class Ingestor:
             print("  missing Swete files -- run fetch_sources.py first")
             return
 
-        # Swete's three-letter codes for the books that exist in our canon. The
-        # deuterocanonical books it also carries (Judith, Tobit, Sirach, Wisdom,
-        # Baruch, Maccabees) have no home in a 66-book canon and are skipped.
+        # Swete's three-letter codes. What is deliberately NOT mapped: alternate
+        # textual traditions of books already loaded (Dat, Bet, Sut, Tbs), which
+        # would double-count, and texts outside all three canons StudyHelp knows
+        # (Odes, Psalms of Solomon, 1 Enoch).
         codes = {
+            # Deuterocanonical books the Septuagint carries.
+            "Tob": "Tobit", "Jdt": "Judith", "Wis": "Wisdom", "Sir": "Sirach",
+            "Bar": "Baruch", "1Ma": "1 Maccabees", "2Ma": "2 Maccabees",
+            "3Ma": "3 Maccabees", "4Ma": "4 Maccabees", "1Es": "1 Esdras",
+            "Sus": "Susanna", "Bel": "Bel and the Dragon",
             "Gen": "Genesis", "Exo": "Exodus", "Lev": "Leviticus", "Num": "Numbers",
             "Deu": "Deuteronomy", "Jos": "Joshua", "Jdg": "Judges", "Rut": "Ruth",
             "1Sa": "1 Samuel", "2Sa": "2 Samuel", "1Ki": "1 Kings", "2Ki": "2 Kings",

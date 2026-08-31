@@ -65,6 +65,19 @@ def upsert_canon(conn):
         "chapters=excluded.chapters, testament=excluded.testament",
         [(b["id"], b["name"], b["abbr"], b["chapters"], b["testament"]) for b in books],
     )
+
+    with open(CANON, encoding="utf-8") as fh:
+        canons = json.load(fh).get("canons", {})
+    rows = [
+        (name, book_id, ordering)
+        for name, meta in canons.items()
+        for ordering, book_id in enumerate(meta["books"], start=1)
+    ]
+    conn.executemany(
+        "INSERT INTO canon_membership (canon, book_id, ordering) VALUES (?, ?, ?) "
+        "ON CONFLICT (canon, book_id) DO UPDATE SET ordering=excluded.ordering",
+        rows,
+    )
     return len(books)
 
 
