@@ -1,0 +1,40 @@
+{
+  "$comment": "Concrete retrieval targets per source id. Kept separate from sources.json because URLs rot faster than licences do. Every successful fetch writes a fetch_log row recording the URL, timestamp, size and sha256, so we always know exactly which bytes a claim came from.",
+  "schema_version": 1,
+  "downloads": [
+    {
+      "source_id": "openscriptures-strongs",
+      "files": [
+        {"url": "https://raw.githubusercontent.com/openscriptures/strongs/master/hebrew/strongs-hebrew-dictionary.js", "path": "strongs/strongs-hebrew-dictionary.js"},
+        {"url": "https://raw.githubusercontent.com/openscriptures/strongs/master/greek/strongs-greek-dictionary.js", "path": "strongs/strongs-greek-dictionary.js"}
+      ]
+    },
+    {
+      "source_id": "openscriptures-hebrewlexicon",
+      "files": [
+        {"url": "https://raw.githubusercontent.com/openscriptures/HebrewLexicon/master/HebrewStrong.xml", "path": "hebrewlexicon/HebrewStrong.xml"},
+        {"url": "https://raw.githubusercontent.com/openscriptures/HebrewLexicon/master/BrownDriverBriggs.xml", "path": "hebrewlexicon/BrownDriverBriggs.xml"},
+        {"url": "https://raw.githubusercontent.com/openscriptures/HebrewLexicon/master/LexicalIndex.xml", "path": "hebrewlexicon/LexicalIndex.xml"}
+      ]
+    },
+    {
+      "source_id": "morphgnt-sblgnt",
+      "note": "26 book files, 61-Mt-morphgnt.txt .. 87-Re-morphgnt.txt; enumerate from the repo listing at ingest time.",
+      "files": [
+        {"url": "https://raw.githubusercontent.com/morphgnt/sblgnt/master/61-Mt-morphgnt.txt", "path": "morphgnt/61-Mt-morphgnt.txt"}
+      ]
+    },
+    {
+      "source_id": "oshb-morphhb",
+      "note": "One OSIS XML per book under wlc/; enumerate at ingest time.",
+      "files": [
+        {"url": "https://raw.githubusercontent.com/openscriptures/morphhb/master/wlc/Gen.xml", "path": "oshb/Gen.xml"}
+      ]
+    },
+    {
+      "source_id": "stepbible-data",
+      "note": "Large TSV releases; prefer a tagged release over master. Confirm current filenames before bulk fetch.",
+      "files": []
+    }
+  ]
+}

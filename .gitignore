@@ -1,0 +1,9 @@
+# Fetched corpora: retrieved on demand via scripts/fetch_sources.py, never committed.
+# The registry and the fetch log are what we version, not the datasets themselves.
+data/raw/
+
+# Generated database: rebuilt from schema + registry via scripts/init_db.py.
+data/*.db
+
+__pycache__/
+*.pyc
