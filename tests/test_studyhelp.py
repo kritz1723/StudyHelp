@@ -19,6 +19,7 @@ sys.path.insert(0, str(ROOT / "scripts"))
 
 import ingest  # noqa: E402
 import init_db  # noqa: E402
+import report_stats  # noqa: E402
 
 RAW = ROOT / "data" / "raw"
 
@@ -205,6 +206,33 @@ class CompositionDateTests(unittest.TestCase):
         for key, meta in self.doc["traditions"].items():
             self.assertTrue(meta.get("label"))
             self.assertTrue(meta.get("description"))
+
+
+class StatsReportTests(unittest.TestCase):
+    """The deploy's own reporting broke a release once, by assuming every
+    statistic was a number. It is a script with tests now, not inline YAML."""
+
+    def test_nested_mappings_do_not_raise(self):
+        lines = report_stats.format_stats(
+            {"canons": {"protestant": 66, "catholic": 76}}
+        )
+        self.assertEqual(lines, ["canons: catholic 76, protestant 66"])
+
+    def test_numbers_get_thousands_separators(self):
+        self.assertEqual(report_stats.format_stats({"lemmas": 14686}), ["lemmas: 14,686"])
+
+    def test_strings_and_none_survive(self):
+        self.assertEqual(
+            report_stats.format_stats({"built": "yes", "missing": None}),
+            ["built: yes", "missing: None"],
+        )
+
+    def test_real_stats_file_formats(self):
+        site = ROOT / "site" / "stats.json"
+        if not site.exists():
+            self.skipTest("site not built")
+        stats = json.loads(site.read_text())
+        self.assertEqual(len(report_stats.format_stats(stats)), len(stats))
 
 
 class GreekNormalisationTests(unittest.TestCase):
