@@ -190,14 +190,40 @@ async function showLemma(slug) {
     <span class="ct">${count}</span>
     <span class="track" style="width:${Math.max(2, (count / peak) * 100)}%"></span>`).join('');
 
-  const senses = data.senses.length
-    ? data.senses.map((s) => `
+  const senseGroups = Object.entries(data.senses || {});
+  const senses = senseGroups.length
+    ? senseGroups.map(([source, entries]) => `
         <div class="sense">
-          <p>${esc(s.gloss)}</p>
-          ${s.attested ? '' : '<p class="inferred">a reading inferred, not directly attested</p>'}
-          <p class="said-by">according to ${esc(said(s.source))}</p>
-        </div>`).join('')
+          <p class="said-by">${esc(said(source))}</p>
+          ${entries.map((e) => `<p>${esc(e.gloss)}</p>
+            ${e.attested ? '' : '<p class="inferred">a reading inferred, not directly attested</p>'}`).join('')}
+        </div>`).join('') +
+      (senseGroups.length > 1
+        ? `<p class="note">Two dictionaries, shown side by side. Where they differ, the
+             difference is left standing rather than resolved — deciding between them is
+             yours, not this page's.</p>`
+        : `<p class="note">Only one dictionary covers this word here, so there is no second
+             opinion to set against it.</p>`)
     : '<p class="hint">No dictionary entry is linked to this word yet.</p>';
+
+  // The transmission chain: Hebrew → Septuagint → Greek → English.
+  const toGreek = data.to_greek || [];
+  const fromHebrew = data.from_hebrew || [];
+  const chain = (toGreek.length || fromHebrew.length) ? `
+    <h3>Through the Septuagint</h3>
+    ${toGreek.length ? `
+      <p class="note">When the Hebrew scriptures were translated into Greek, around the
+         third to second century BC, this word was rendered:</p>
+      <div class="chips">${toGreek.map(([text, count]) => `
+        <span class="chip"><span class="w">${esc(text)}</span>
+          <span class="c">${count}</span></span>`).join('')}</div>` : ''}
+    ${fromHebrew.length ? `
+      <p class="note">This Greek word stands in the Septuagint for these Hebrew words —
+         the route by which Hebrew meaning reached the Greek of the New Testament:</p>
+      <div class="chips">${fromHebrew.map(([hebrew, xlit, count]) => `
+        <span class="chip"><span class="w">${esc(hebrew)}</span>
+          <span class="c">${esc(xlit || '')} ${count}</span></span>`).join('')}</div>` : ''}
+    <p class="note">According to ${esc(said('macula-hebrew'))}.</p>` : '';
 
   let origin = '<p class="hint">This word is known to a dictionary but has no tagged occurrence in the text.</p>';
   if (data.first) {
@@ -263,6 +289,8 @@ async function showLemma(slug) {
     ${data.lang !== 'en' ? `<p class="note">Counts come from the tagged Hebrew and Greek,
        which cover the 66-book canon only. The deuterocanonical books can be read here
        but are not yet counted.</p>` : ''}
+
+    ${chain}
 
     ${renderedIn ? `<h3>What it became</h3>${renderedIn}
        <p class="note">One word in the original, and the words chosen for it.

@@ -188,6 +188,20 @@ CREATE TABLE IF NOT EXISTS gloss (
 
 CREATE INDEX IF NOT EXISTS idx_gloss_version ON gloss(version_id);
 
+-- How the Septuagint rendered a given Hebrew word: the hinge of the transmission
+-- chain Hebrew -> Greek OT -> Greek NT -> English. Without this, a reader can see
+-- a Greek word and a Hebrew word but not the historical link between them, which
+-- is where meaning actually moved.
+CREATE TABLE IF NOT EXISTS lxx_equivalent (
+    token_id       INTEGER NOT NULL REFERENCES token(id),
+    greek_text     TEXT NOT NULL,      -- the Greek word standing for this Hebrew one
+    greek_lemma_id INTEGER REFERENCES lemma(id),
+    source_id      TEXT NOT NULL REFERENCES source(id),
+    PRIMARY KEY (token_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_lxx_equivalent_lemma ON lxx_equivalent(greek_lemma_id);
+
 -- An interpretive reading attributed to a tradition or school. Never merged,
 -- never ranked; `ordering` is declared (by source date) rather than editorial.
 CREATE TABLE IF NOT EXISTS perspective (

@@ -425,6 +425,16 @@
           "path": "macula/macula-greek-SBLGNT.tsv"
         }
       ]
+    },
+    {
+      "source_id": "macula-hebrew",
+      "note": "Git LFS, so served from media.githubusercontent.com; the raw host returns only a pointer file.",
+      "files": [
+        {
+          "url": "https://media.githubusercontent.com/media/Clear-Bible/macula-hebrew/main/WLC/tsv/macula-hebrew.tsv",
+          "path": "macula/macula-hebrew.tsv"
+        }
+      ]
     }
   ]
 }

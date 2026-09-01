@@ -62,7 +62,15 @@ recorded here rather than dropped, so the trade-off stays visible.
       against the known 31,102.
 - [x] **Ingest the Septuagint text.** Swete (Cambridge 1909–1930) loaded, 22,955 verses,
       readable alongside every other version.
-- [ ] **Lemma-level LXX bridging is BLOCKED by licensing.** This is the most consequential
+- [x] **Lemma-level LXX bridging — solved from a different direction.** MACULA Hebrew
+      (CC BY 4.0) records the Greek equivalent for each Hebrew word, giving 251,639
+      Hebrew→Greek links without needing the licence-blocked tagged Septuagint. The chain
+      is now queryable both ways: kapporeth → hilasterion, and back.
+- [ ] **The Septuagint text itself is still untagged.** The bridge comes from MACULA's
+      Hebrew-side alignment, not from a lemma-tagged LXX, so the Swete text loaded here
+      still cannot be searched by word. Tagging it with an open analyser remains the route
+      to that, and is now a smaller prize than it was.
+- [ ] Previously recorded, still true — **the tagged Septuagint editions are blocked:** This is the most consequential
       open problem in the project. The chain Hebrew→LXX→Greek NT needs the LXX *tagged by
       lemma*, and the three available routes each fail:
       - **Rahlfs via CATSS/CCAT** has the morphology and Strong's tags, but is
@@ -88,11 +96,20 @@ recorded here rather than dropped, so the trade-off stays visible.
       New Testament only. The Hebrew side needs MACULA Hebrew, and the historical English
       versions (Wycliffe, Tyndale, KJV) have no word-level alignment at all — so the drift
       view cannot yet run across centuries, only across present-day glosses.
-- [ ] **Louw-Nida semantic domains.** MACULA carries the domain codes, which would be a
-      second, independent sense authority and the first chance to show lexicons
-      disagreeing. Two obstacles: the codes need the Louw-Nida domain labels to be
-      readable, and the sense data inside MACULA comes from UBS MARBLE marked "used with
-      permission" rather than CC BY, so its redistribution needs checking first.
+- [x] **A second sense authority — reached by the open route.** Brown-Driver-Briggs is
+      public domain and keyed to Strong's through the Open Scriptures lexical index;
+      9,291 senses loaded. Hebrew words now show two dictionaries side by side, and where
+      they differ the difference is left standing. This is the first time the app can do
+      the thing it exists for.
+- [ ] **Semantic domains are permission-only — checked, and the answer is no.** Louw-Nida
+      (via UBS MARBLE) for Greek and the Semantic Dictionary of Biblical Hebrew are both
+      marked "used with permission" inside MACULA rather than CC BY. Clear Bible holds
+      that permission; we do not inherit it. Seeking permission from the United Bible
+      Societies directly is the only legitimate route. A test now fails if those columns
+      are ever ingested.
+- [ ] **A second Greek authority.** Abbott-Smith is public domain and registered but not
+      yet parsed; Greek words still have only Strong's, so they show no disagreement while
+      Hebrew words do.
 - [ ] **unfoldingWord is unreachable from this environment.** git.door43.org is blocked
       by the network policy and the repositories are not mirrored on GitHub, so the
       aligned ULT/UST could not be evaluated.

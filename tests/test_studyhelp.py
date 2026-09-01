@@ -87,6 +87,22 @@ class RegistryTests(unittest.TestCase):
             self.assertTrue(src.get("license"), f"{src['id']} has no licence")
             self.assertTrue(src.get("name"), f"{src['id']} has no name")
 
+    def test_permission_only_data_is_not_ingested(self):
+        """Semantic-domain data inside MACULA is licensed to Clear Bible, not to us.
+
+        Louw-Nida (via UBS MARBLE) for Greek and the Semantic Dictionary of
+        Biblical Hebrew are both marked "used with permission" rather than CC BY.
+        They are exactly the data this project wants most, which is why the rule
+        needs a test rather than a good intention.
+        """
+        from pathlib import Path as _Path
+        ingest_source = (ROOT / "scripts" / "ingest.py").read_text()
+        for column in ('"lexdomain"', '"coredomain"', '"sdbh"', '"ln"'):
+            self.assertNotIn(
+                f"row.get({column})", ingest_source,
+                f"{column} is permission-only data and must not be ingested",
+            )
+
     def test_no_noncommercial_source_is_fetched(self):
         """A NonCommercial or declaration-gated source must never be in the fetch list.
 
@@ -429,6 +445,60 @@ class IngestedCorpusTests(unittest.TestCase):
         if not rows:
             self.skipTest("glosses not ingested")
         self.assertGreater(rows, 1)
+
+    def test_septuagint_bridge_links_hebrew_to_greek(self):
+        """The transmission chain, in both directions.
+
+        kapporeth (the mercy seat) is rendered hilasterion in the Septuagint, and
+        that is the route by which the Greek of the New Testament -- and then the
+        English word 'propitiation' -- carries Hebrew sacrificial meaning.
+        """
+        count = self.conn.execute("SELECT COUNT(*) FROM lxx_equivalent").fetchone()[0]
+        if not count:
+            self.skipTest("MACULA Hebrew not ingested")
+        self.assertGreater(count, 200_000)
+
+        forward = self.conn.execute(
+            "SELECT e.greek_text, COUNT(*) c FROM lxx_equivalent e "
+            "JOIN token t ON t.id = e.token_id JOIN lemma l ON l.id = t.lemma_id "
+            "WHERE l.strongs = 'H3727' GROUP BY e.greek_text ORDER BY c DESC LIMIT 1"
+        ).fetchone()
+        self.assertTrue(forward[0].startswith("ἱλαστ"), forward)
+
+        backward = self.conn.execute(
+            "SELECT l.strongs FROM lxx_equivalent e JOIN token t ON t.id = e.token_id "
+            "JOIN lemma l ON l.id = t.lemma_id JOIN lemma g ON g.id = e.greek_lemma_id "
+            "WHERE g.strongs = 'G2435' GROUP BY l.id ORDER BY COUNT(*) DESC LIMIT 1"
+        ).fetchone()
+        self.assertEqual(backward[0], "H3727")
+
+    def test_no_placeholder_is_stored_as_a_greek_word(self):
+        # MACULA marks "no equivalent" with punctuation; storing those would
+        # invent Septuagint readings that do not exist.
+        bad = self.conn.execute(
+            "SELECT COUNT(*) FROM lxx_equivalent WHERE greek_text IN ('’’', '^^^', '^', '{%}')"
+        ).fetchone()[0]
+        self.assertEqual(bad, 0)
+
+    def test_hebrew_words_have_two_independent_authorities(self):
+        """The app exists to show disagreement, which needs a second opinion."""
+        sources = self.conn.execute(
+            "SELECT COUNT(DISTINCT s.source_id) FROM sense s JOIN lemma l ON l.id = s.lemma_id "
+            "WHERE l.strongs = 'H430'"
+        ).fetchone()[0]
+        if not sources:
+            self.skipTest("senses not ingested")
+        self.assertGreaterEqual(sources, 2)
+
+    def test_senses_do_not_duplicate_on_reingest(self):
+        before = self.conn.execute(
+            "SELECT COUNT(*) FROM sense WHERE source_id = 'openscriptures-strongs'"
+        ).fetchone()[0]
+        if not before:
+            self.skipTest("senses not ingested")
+        # Guards the re-run path: sense rows have no natural key to conflict on,
+        # so a loader that merely inserts would stack a second copy each time.
+        self.assertLess(before, 40_000)
 
     def test_every_token_traces_to_a_registered_source(self):
         orphans = self.conn.execute(

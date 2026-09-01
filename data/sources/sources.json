@@ -443,6 +443,24 @@
       "priority": "high",
       "verified": "2026-08-31",
       "notes": "The Mandarin glosses are the project's first non-European-language data."
+    },
+    {
+      "id": "macula-hebrew",
+      "name": "MACULA Hebrew Linguistic Datasets",
+      "kind": "original_text_tagged",
+      "language": "hbo,arc",
+      "description": "Word-level annotation of the Hebrew Bible: Strong's numbers, morphology, English and Mandarin glosses, semantic domains from the Semantic Dictionary of Biblical Hebrew, and -- critically -- the Greek equivalent each Hebrew word was given in the Septuagint.",
+      "license": "CC-BY-4.0",
+      "attribution": "MACULA Hebrew Linguistic Datasets, available at https://github.com/Clear-Bible/macula-hebrew/ © Biblica, Inc.",
+      "repository": "https://github.com/Clear-Bible/macula-hebrew",
+      "formats": [
+        "TSV",
+        "XML"
+      ],
+      "tier": 1,
+      "priority": "critical",
+      "verified": "2026-09-01",
+      "notes": "Carries the Septuagint equivalent per Hebrew word, which supplies the Hebrew-to-Greek link the transmission chain needs without requiring the licence-blocked tagged Septuagint. Distributed via Git LFS, so it is fetched from the media host rather than the raw host."
     }
   ]
 }

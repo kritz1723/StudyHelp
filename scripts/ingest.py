@@ -113,6 +113,9 @@ class Ingestor:
     def ingest_strongs(self):
         """Load Strong's Hebrew and Greek dictionaries as lemma + sense rows."""
         source_id = "openscriptures-strongs"
+        # Senses have no natural key to conflict on, so a re-run replaces this
+        # source's rows rather than stacking a second copy of every definition.
+        self.conn.execute("DELETE FROM sense WHERE source_id = ?", (source_id,))
         lemmas = senses = 0
 
         for filename, language in (
@@ -577,6 +580,201 @@ class Ingestor:
               f"re-linked by explicit Strong's, {len(gloss_rows)} glosses")
 
 
+    def ingest_macula_hebrew(self):
+        """Annotate the Hebrew Bible, and record how the Septuagint rendered it.
+
+        The Septuagint equivalent per Hebrew word is the important part. It
+        supplies the Hebrew-to-Greek link the transmission chain needs, without
+        the tagged Septuagint edition that licensing puts out of reach.
+
+        MACULA counts morphemes where OSHB counts words, so a Hebrew word with
+        prefixes appears here as several rows sharing one word index. They are
+        grouped back into the word, and the LAST segment is treated as the head:
+        Hebrew prefixes precede the stem, so the final segment carries the sense,
+        which is also how the OSHB lemma was read.
+        """
+        source_id = "macula-hebrew"
+        path = RAW / "macula" / "macula-hebrew.tsv"
+        if not path.exists():
+            print("  missing MACULA Hebrew file -- run fetch_sources.py first")
+            return
+
+        codes = {
+            "GEN": 1, "EXO": 2, "LEV": 3, "NUM": 4, "DEU": 5, "JOS": 6, "JDG": 7,
+            "RUT": 8, "1SA": 9, "2SA": 10, "1KI": 11, "2KI": 12, "1CH": 13,
+            "2CH": 14, "EZR": 15, "NEH": 16, "EST": 17, "JOB": 18, "PSA": 19,
+            "PRO": 20, "ECC": 21, "SNG": 22, "ISA": 23, "JER": 24, "LAM": 25,
+            "EZK": 26, "DAN": 27, "HOS": 28, "JOL": 29, "AMO": 30, "OBA": 31,
+            "JON": 32, "MIC": 33, "NAM": 34, "HAB": 35, "ZEP": 36, "HAG": 37,
+            "ZEC": 38, "MAL": 39,
+        }
+
+        for version_id, gloss_source, name, language in (
+            ("cherith-en", "cherith-glosses", "Cherith Glosses (English)", "en"),
+            ("cherith-zh", "cherith-glosses", "Cherith Glosses (Mandarin)", "zh"),
+        ):
+            self.conn.execute(
+                "INSERT INTO version (id, source_id, name, language, year, era, translated_from) "
+                "VALUES (?, ?, ?, ?, 2023, 'contemporary', 'Hebrew and Greek') "
+                "ON CONFLICT(id) DO NOTHING",
+                (version_id, gloss_source, name, language),
+            )
+
+        tokens = {}
+        for token_id, book_id, chapter, verse, position in self.conn.execute(
+            "SELECT t.id, v.book_id, v.chapter, v.verse, t.position FROM token t "
+            "JOIN verse v ON v.id = t.verse_id WHERE t.source_id = 'oshb-morphhb'"
+        ):
+            tokens[(book_id, chapter, verse, position)] = token_id
+
+        greek_lemma = {
+            strongs: lemma_id
+            for lemma_id, strongs in self.conn.execute(
+                "SELECT id, strongs FROM lemma WHERE language='grc' AND strongs IS NOT NULL"
+            )
+        }
+
+        groups = {}
+        with open(path, encoding="utf-8") as fh:
+            for row in csv.DictReader(fh, delimiter="\t"):
+                head, _, index = (row.get("ref") or "").partition("!")
+                code, _, coords = head.partition(" ")
+                chapter_text, _, verse_text = coords.partition(":")
+                book_id = codes.get(code)
+                if not (book_id and index.isdigit()
+                        and chapter_text.isdigit() and verse_text.isdigit()):
+                    continue
+                key = (book_id, int(chapter_text), int(verse_text), int(index))
+                groups.setdefault(key, []).append(row)
+
+        matched = bridged = 0
+        gloss_rows = []
+        bridge_rows = []
+        for key, rows in groups.items():
+            token_id = tokens.get(key)
+            if token_id is None:
+                continue
+            matched += 1
+            head_row = rows[-1]
+
+            for column, version_id in (("english", "cherith-en"), ("mandarin", "cherith-zh")):
+                text = " ".join(r[column].strip() for r in rows if r.get(column)).strip()
+                if text:
+                    gloss_rows.append((token_id, version_id, text, "cherith-glosses"))
+
+            greek_text = (head_row.get("greek") or "").strip()
+            # MACULA marks "no Greek equivalent here" with punctuation placeholders
+            # (’’, ^^^, ‐‐+). Storing those as Greek words would invent equivalents
+            # that the Septuagint does not contain.
+            if greek_text and any(ch.isalpha() for ch in greek_text):
+                greek_strong = (head_row.get("greekstrong") or "").strip()
+                lemma_id = None
+                if greek_strong.isdigit():
+                    lemma_id = greek_lemma.get(f"G{int(greek_strong)}")
+                bridge_rows.append((token_id, greek_text, lemma_id, source_id))
+                bridged += 1
+
+        self.conn.executemany(
+            "INSERT INTO gloss (token_id, version_id, text, source_id) VALUES (?, ?, ?, ?) "
+            "ON CONFLICT (token_id, version_id) DO UPDATE SET text=excluded.text",
+            gloss_rows,
+        )
+        self.conn.executemany(
+            "INSERT INTO lxx_equivalent (token_id, greek_text, greek_lemma_id, source_id) "
+            "VALUES (?, ?, ?, ?) ON CONFLICT (token_id) DO UPDATE SET "
+            "greek_text=excluded.greek_text, greek_lemma_id=excluded.greek_lemma_id",
+            bridge_rows,
+        )
+
+        total = len(groups)
+        rate = (matched / total * 100) if total else 0
+        print(f"  macula-hebrew: {matched} words matched ({rate:.1f}%), "
+              f"{len(gloss_rows)} glosses, {bridged} Septuagint equivalents")
+
+
+    def ingest_bdb(self):
+        """Load Brown-Driver-Briggs as a second Hebrew sense authority.
+
+        Until now every Hebrew meaning came from Strong's alone, so the app could
+        not do the one thing it exists for: show that authorities disagree. BDB is
+        public domain and independent, and its definitions are keyed to Strong's
+        numbers through the Open Scriptures lexical index.
+
+        This is the open route to a second opinion. The semantic-domain data
+        inside MACULA (Louw-Nida via UBS MARBLE for Greek, and the Semantic
+        Dictionary of Biblical Hebrew) would serve the same purpose, but both are
+        marked "used with permission" rather than openly licensed, so they are
+        deliberately not ingested.
+        """
+        source_id = "openscriptures-hebrewlexicon"
+        index_path = RAW / "hebrewlexicon" / "LexicalIndex.xml"
+        bdb_path = RAW / "hebrewlexicon" / "BrownDriverBriggs.xml"
+        if not index_path.exists():
+            print("  missing lexicon files -- run fetch_sources.py first")
+            return
+
+        def text_of(element):
+            return " ".join("".join(element.itertext()).split())
+
+        # These files are namespaced; iterating on bare tag names finds nothing.
+        def tag(root, name):
+            namespace = root.tag.split("}")[0][1:] if "}" in root.tag else ""
+            return f"{{{namespace}}}{name}" if namespace else name
+
+        # Fuller definitions from the BDB entries themselves, keyed by BDB id.
+        bdb_defs = {}
+        if bdb_path.exists():
+            bdb_tree = ET.parse(bdb_path)
+            bdb_root = bdb_tree.getroot()
+            for entry in bdb_tree.iter(tag(bdb_root, "entry")):
+                entry_id = entry.get("id")
+                if not entry_id:
+                    continue
+                defs = [text_of(d) for d in entry.iter(tag(bdb_root, "def"))]
+                defs = [d for d in defs if d]
+                if defs:
+                    bdb_defs[entry_id] = "; ".join(dict.fromkeys(defs))[:400]
+
+        lemmas = {
+            strongs: lemma_id
+            for lemma_id, strongs in self.conn.execute(
+                "SELECT id, strongs FROM lemma WHERE language='hbo' AND strongs IS NOT NULL"
+            )
+        }
+
+        self.conn.execute("DELETE FROM sense WHERE source_id = ?", (source_id,))
+
+        rows = []
+        index_tree = ET.parse(index_path)
+        index_root = index_tree.getroot()
+        for entry in index_tree.iter(tag(index_root, "entry")):
+            xref = entry.find(tag(index_root, "xref"))
+            if xref is None:
+                continue
+            strongs = xref.get("strong")
+            if not (strongs and strongs.isdigit()):
+                continue
+            lemma_id = lemmas.get(f"H{int(strongs)}")
+            if lemma_id is None:
+                continue
+
+            definition = entry.find(tag(index_root, "def"))
+            gloss = text_of(definition) if definition is not None else ""
+            fuller = bdb_defs.get(xref.get("bdb") or "")
+            if not gloss and fuller:
+                gloss = fuller.split(";")[0]
+            if not gloss:
+                continue
+            rows.append((lemma_id, gloss[:200], fuller, source_id))
+
+        self.conn.executemany(
+            "INSERT INTO sense (lemma_id, gloss, definition, source_id, attested, ordering) "
+            "VALUES (?, ?, ?, ?, 1, 0)",
+            rows,
+        )
+        print(f"  bdb: {len(rows)} senses from Brown-Driver-Briggs")
+
+
 DATASETS = {
     "strongs": "ingest_strongs",
     "oshb": "ingest_oshb",
@@ -584,6 +782,8 @@ DATASETS = {
     "translations": "ingest_translations",
     "lxx": "ingest_lxx",
     "macula": "ingest_macula",
+    "macula-hebrew": "ingest_macula_hebrew",
+    "bdb": "ingest_bdb",
 }
 
 
@@ -597,8 +797,8 @@ def main():
     if not args.dataset and not args.all:
         parser.error("pass --dataset <name> or --all")
 
-    order = (["strongs", "oshb", "morphgnt", "macula", "translations", "lxx"]
-             if args.all else [args.dataset])
+    order = (["strongs", "bdb", "oshb", "morphgnt", "macula", "macula-hebrew",
+              "translations", "lxx"] if args.all else [args.dataset])
 
     conn = sqlite3.connect(args.db)
     conn.execute("PRAGMA foreign_keys = ON")
