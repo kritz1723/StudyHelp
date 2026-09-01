@@ -19,6 +19,16 @@ DEFAULT_DB = ROOT / "data" / "studyhelp.db"
 WEB = ROOT / "web"
 
 
+def first_gloss(grouped):
+    """The headline gloss, taken from whichever authority comes first."""
+    if not grouped:
+        return ""
+    for entries in grouped.values():
+        if entries:
+            return entries[0].get("gloss") or ""
+    return ""
+
+
 def build(conn, out_dir):
     out_dir.mkdir(parents=True, exist_ok=True)
     lemma_dir = out_dir / "lemma"
@@ -102,13 +112,35 @@ def build(conn, out_dir):
     ):
         renderings_by_lemma.setdefault(lemma_id, {}).setdefault(version_id, []).append([text, count])
 
+    # Senses are grouped by the authority that gives them. Two authorities saying
+    # different things is the point, so they are never merged into one list.
     senses = {}
     for lemma_id, gloss, definition, source_id, attested in conn.execute(
-        "SELECT lemma_id, gloss, definition, source_id, attested FROM sense ORDER BY lemma_id, ordering, id"
+        "SELECT lemma_id, gloss, definition, source_id, attested FROM sense "
+        "ORDER BY lemma_id, source_id, ordering, id"
     ):
-        senses.setdefault(lemma_id, []).append(
-            {"gloss": gloss, "definition": definition, "source": source_id, "attested": bool(attested)}
+        senses.setdefault(lemma_id, {}).setdefault(source_id, []).append(
+            {"gloss": gloss, "definition": definition, "attested": bool(attested)}
         )
+
+    # The transmission chain: which Greek words the Septuagint used for a Hebrew
+    # word, and which Hebrew words a Greek word stands for.
+    to_greek, from_hebrew = {}, {}
+    for lemma_id, greek_text, count in conn.execute(
+        "SELECT t.lemma_id, e.greek_text, COUNT(*) c FROM lxx_equivalent e "
+        "JOIN token t ON t.id = e.token_id WHERE t.lemma_id IS NOT NULL "
+        "GROUP BY t.lemma_id, e.greek_text ORDER BY t.lemma_id, c DESC"
+    ):
+        to_greek.setdefault(lemma_id, []).append([greek_text, count])
+
+    for greek_lemma_id, hebrew, xlit, count in conn.execute(
+        "SELECT e.greek_lemma_id, l.lemma, l.transliteration, COUNT(*) c "
+        "FROM lxx_equivalent e JOIN token t ON t.id = e.token_id "
+        "JOIN lemma l ON l.id = t.lemma_id "
+        "WHERE e.greek_lemma_id IS NOT NULL GROUP BY e.greek_lemma_id, l.id "
+        "ORDER BY e.greek_lemma_id, c DESC"
+    ):
+        from_hebrew.setdefault(greek_lemma_id, []).append([hebrew, xlit, count])
 
     index = []
     written = 0
@@ -132,11 +164,13 @@ def build(conn, out_dir):
             "n": count,
             # The first gloss doubles as the English search target: users arrive
             # with an English word, not a Strong's number.
-            "gloss": (senses.get(lemma_id, [{}])[0].get("gloss") or "")[:120],
+            "gloss": (first_gloss(senses.get(lemma_id)) or "")[:120],
             # Every recorded meaning is searchable, not just the first. A reader
             # arriving with "propitiation" must reach the words behind it, and
             # that term appears in a later sense than the headline gloss.
-            "terms": " ".join(x["gloss"] for x in senses.get(lemma_id, []))[:220],
+            "terms": " ".join(
+                x["gloss"] for group in senses.get(lemma_id, {}).values() for x in group
+            )[:220],
             # Sort keys for "earliest first appearance". A range cannot be sorted
             # directly, so the declared rule is: sort by the EARLIEST bound of the
             # selected tradition. The rule is stated in the UI rather than hidden.
@@ -154,7 +188,9 @@ def build(conn, out_dir):
             "lexicon_source": source_id,
             "first": first,
             "distribution": sorted(distribution.get(lemma_id, []), key=lambda r: -r[1]),
-            "senses": senses.get(lemma_id, []),
+            "senses": senses.get(lemma_id, {}),
+            "to_greek": to_greek.get(lemma_id, [])[:12],
+            "from_hebrew": from_hebrew.get(lemma_id, [])[:12],
             "renderings": {
                 version: entries[:12]
                 for version, entries in renderings_by_lemma.get(lemma_id, {}).items()
@@ -220,6 +256,7 @@ def build(conn, out_dir):
         "versions": len(versions),
         "canons": {name: len(books) for name, books in canons.items()},
         "glosses": conn.execute("SELECT COUNT(*) FROM gloss").fetchone()[0],
+        "septuagint_links": conn.execute("SELECT COUNT(*) FROM lxx_equivalent").fetchone()[0],
     }
     (out_dir / "stats.json").write_text(json.dumps(stats), encoding="utf-8")
 

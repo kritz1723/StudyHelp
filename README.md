@@ -85,7 +85,8 @@ Fetched corpora and the generated database are gitignored — the *registry* and
 | Lemmas | 14,686 |
 | Attested senses | 28,367 |
 | Composition-date ranges | 132 (66 books × 2 traditions) |
-| Per-word glosses | 386,092 (English and Mandarin) |
+| Per-word glosses | 974,945 (English and Mandarin) |
+| Hebrew→Greek Septuagint links | 251,639 |
 | Greek tokens with explicit Strong's | 99.996% |
 
 Translations span Wycliffe (1395), Tyndale (1526), the KJV (1769), Young's Literal
@@ -94,6 +95,22 @@ Translations span Wycliffe (1395), Tyndale (1526), the KJV (1769), Young's Liter
 Spot-checked against independently known counts: *elohim* (H430) 2,600 occurrences
 first at Genesis 1:1; *agape* (G26) 116 occurrences first at Matthew 24:12, clustering
 in 1 John. These are asserted in the test suite so parser regressions surface fast.
+
+## The chain
+
+A word is followed from Hebrew, through the Greek the Septuagint chose for it, into the
+Greek of the New Testament, and on into English. For the mercy seat:
+
+| | |
+| --- | --- |
+| Hebrew | כַּפֹּרֶת (*kappôreth*) |
+| Septuagint renders it | ἱλαστήριον ×10 |
+| The New Testament word | ἱλαστήριον (*hilastērion*) |
+| English | propitiation |
+
+251,639 Hebrew→Greek links, from MACULA Hebrew's record of the Septuagint equivalent for
+each Hebrew word. The chain reads in both directions: ask a Greek word which Hebrew words
+it stands for, and the answer comes back.
 
 ## What a word became
 
