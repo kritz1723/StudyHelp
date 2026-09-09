@@ -98,16 +98,16 @@
       "kind": "lexicon",
       "language": "grc",
       "description": "Public-domain NT Greek lexicon; the open counterpart to BDB on the Greek side.",
-      "license": "Public domain (text); open licence on the digitisation",
+      "license": "Public domain (text and TEI markup)",
       "attribution": "G. Abbott-Smith; digitised by the Translatable Exegetical Tools project",
       "repository": "https://github.com/translatable-exegetical-tools/Abbott-Smith",
       "formats": [
-        "XML"
+        "TEI XML"
       ],
       "tier": 1,
       "priority": "high",
-      "verified": "unverified",
-      "notes": "Also redistributed inside STEPBible-Data as TBESG under CC-BY-4.0 — prefer that route if the licence there is cleaner."
+      "verified": "2026-09-09",
+      "notes": "Entries carry their Strong's number in the entry's n attribute, which is what makes them linkable. Gives Greek words the second, independent opinion that Hebrew words already have from Brown-Driver-Briggs."
     },
     {
       "id": "lsj-perseus",

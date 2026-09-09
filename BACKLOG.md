@@ -107,9 +107,8 @@ recorded here rather than dropped, so the trade-off stays visible.
       that permission; we do not inherit it. Seeking permission from the United Bible
       Societies directly is the only legitimate route. A test now fails if those columns
       are ever ingested.
-- [ ] **A second Greek authority.** Abbott-Smith is public domain and registered but not
-      yet parsed; Greek words still have only Strong's, so they show no disagreement while
-      Hebrew words do.
+- [x] **A second Greek authority.** Abbott-Smith loaded, 11,485 senses. Greek words now
+      show two dictionaries, as Hebrew words already did.
 - [ ] **unfoldingWord is unreachable from this environment.** git.door43.org is blocked
       by the network policy and the repositories are not mirrored on GitHub, so the
       aligned ULT/UST could not be evaluated.
@@ -159,6 +158,25 @@ recorded here rather than dropped, so the trade-off stays visible.
       exists; the mapping tables do not.
 
 ## Product
+
+- [x] **A verse is now an entry point.** Typing a reference opens the chapter with an
+      interlinear beneath each verse, every word linking into its study. The app's stated
+      purpose is decoding a verse, and until now the only way in was a word.
+- [x] **Design pass.** The chain is the spine of a word's page; composition dates are drawn
+      as a timeline rather than listed; the distribution is summarised by genre and
+      collapsed to six books; renderings are proportional bars instead of equal chips;
+      settings are tucked behind a control; results are marked by language; the landing
+      page offers six starting points.
+- [ ] **Historical drift is still missing, and the obvious source does not have it.** The
+      scrollmapper KJV is titled "with Strongs Numbers and Morphology" but both its JSON
+      and SQLite exports carry plain text only. Tracing a word across centuries needs a
+      genuinely aligned historical version; without one, drift can be shown across
+      languages but not across time.
+- [ ] **Two reference parsers now exist.** `bible-study/js/books.js` is the standalone,
+      tested one; the site parses references from `books.json` so it covers all 82 books.
+      They should converge on one implementation.
+- [ ] **Compare two words side by side.** Still worth building: the classic word study is
+      comparative (agape against phileo, chesed against rachamim).
 
 - [ ] **English word → lemma disambiguation UI.** Searching "love" must resolve to several
       Greek lemmas. The disambiguation step is the app's first real screen and its

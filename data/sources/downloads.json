@@ -435,6 +435,15 @@
           "path": "macula/macula-hebrew.tsv"
         }
       ]
+    },
+    {
+      "source_id": "abbott-smith",
+      "files": [
+        {
+          "url": "https://raw.githubusercontent.com/translatable-exegetical-tools/Abbott-Smith/master/abbott-smith.tei.xml",
+          "path": "lexicons/abbott-smith.tei.xml"
+        }
+      ]
     }
   ]
 }

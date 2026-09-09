@@ -60,10 +60,12 @@ def upsert_canon(conn):
     with open(CANON, encoding="utf-8") as fh:
         books = json.load(fh)["books"]
     conn.executemany(
-        "INSERT INTO book (id, name, abbr, chapters, testament) VALUES (?, ?, ?, ?, ?) "
+        "INSERT INTO book (id, name, abbr, chapters, testament, genre) "
+        "VALUES (?, ?, ?, ?, ?, ?) "
         "ON CONFLICT(id) DO UPDATE SET name=excluded.name, abbr=excluded.abbr, "
-        "chapters=excluded.chapters, testament=excluded.testament",
-        [(b["id"], b["name"], b["abbr"], b["chapters"], b["testament"]) for b in books],
+        "chapters=excluded.chapters, testament=excluded.testament, genre=excluded.genre",
+        [(b["id"], b["name"], b["abbr"], b["chapters"], b["testament"], b.get("genre"))
+         for b in books],
     )
 
     with open(CANON, encoding="utf-8") as fh:

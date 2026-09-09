@@ -87,6 +87,8 @@ Fetched corpora and the generated database are gitignored — the *registry* and
 | Composition-date ranges | 132 (66 books × 2 traditions) |
 | Per-word glosses | 974,945 (English and Mandarin) |
 | Hebrew→Greek Septuagint links | 251,639 |
+| Chapters readable with interlinear | 1,390 |
+| Dictionaries per word | 2 (Hebrew and Greek) |
 | Greek tokens with explicit Strong's | 99.996% |
 
 Translations span Wycliffe (1395), Tyndale (1526), the KJV (1769), Young's Literal
@@ -95,6 +97,14 @@ Translations span Wycliffe (1395), Tyndale (1526), the KJV (1769), Young's Liter
 Spot-checked against independently known counts: *elohim* (H430) 2,600 occurrences
 first at Genesis 1:1; *agape* (G26) 116 occurrences first at Matthew 24:12, clustering
 in 1 John. These are asserted in the test suite so parser regressions surface fast.
+
+## Two ways in
+
+**Read a verse.** Type `John 3:16` and the verse comes up in your chosen translation, with
+the original words beneath it — each one glossed, and each one a link into its full study.
+This is the door for a reader who arrives with a reference rather than a word.
+
+**Trace a word.** Search in English, transliteration, or the original script.
 
 ## The chain
 

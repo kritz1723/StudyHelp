@@ -67,13 +67,37 @@ def build(conn, out_dir):
             "book": book, "chapter": chapter, "verse": verse,
         }
 
-    distribution = {}
+    genres = dict(conn.execute("SELECT name, genre FROM book"))
+    distribution, by_genre = {}, {}
     for lemma_id, book, count in conn.execute(
         "SELECT t.lemma_id, b.name, COUNT(*) FROM token t "
         "JOIN verse v ON v.id = t.verse_id JOIN book b ON b.id = v.book_id "
         "WHERE t.lemma_id IS NOT NULL GROUP BY t.lemma_id, b.id ORDER BY t.lemma_id, b.id"
     ):
         distribution.setdefault(lemma_id, []).append([book, count])
+        genre = genres.get(book) or "other"
+        totals = by_genre.setdefault(lemma_id, {})
+        totals[genre] = totals.get(genre, 0) + count
+
+    # "Earliest" has two defensible answers. Canonical order is the order books
+    # are printed in; composition order is when they were probably written, and
+    # the two differ. Both are shown rather than one being chosen silently.
+    composed = {}
+    for book, tradition, earliest in conn.execute(
+        "SELECT b.name, d.tradition, d.earliest FROM composition_date d "
+        "JOIN book b ON b.id = d.book_id"
+    ):
+        composed.setdefault(tradition, {})[book] = earliest
+
+    earliest_written = {}
+    for tradition, book_dates in composed.items():
+        for lemma_id, books in distribution.items():
+            best = min(
+                (b for b, _ in books if b in book_dates),
+                key=lambda b: book_dates[b], default=None,
+            )
+            if best is not None:
+                earliest_written.setdefault(lemma_id, {})[tradition] = [best, book_dates[best]]
 
     # Composition-date ranges, one per tradition per book. These give a word's
     # first appearance a YEAR as well as a reference -- as a range, because the
@@ -189,6 +213,9 @@ def build(conn, out_dir):
             "first": first,
             "distribution": sorted(distribution.get(lemma_id, []), key=lambda r: -r[1]),
             "senses": senses.get(lemma_id, {}),
+            "by_genre": sorted(by_genre.get(lemma_id, {}).items(), key=lambda kv: -kv[1]),
+            "earliest_written": earliest_written.get(lemma_id, {}),
+            "hapax": count == 1,
             "to_greek": to_greek.get(lemma_id, [])[:12],
             "from_hebrew": from_hebrew.get(lemma_id, [])[:12],
             "renderings": {
@@ -244,6 +271,82 @@ def build(conn, out_dir):
         json.dumps(canons, ensure_ascii=False, separators=(",", ":")), encoding="utf-8"
     )
 
+    # Chapter files power the verse view -- the entry point for a reader who
+    # arrives with a reference rather than a word. One file per chapter keeps the
+    # request count sane; one file per verse would mean 31,000 of them.
+    chapter_dir = out_dir / "chapter"
+    if chapter_dir.exists():
+        shutil.rmtree(chapter_dir)
+    chapter_dir.mkdir()
+
+    lemma_slug = {}
+    for lemma_id, strongs in conn.execute("SELECT id, strongs FROM lemma"):
+        lemma_slug[lemma_id] = strongs or f"L{lemma_id}"
+
+    words_by_verse = {}
+    for book, chapter, verse, position, surface, lemma_id, language in conn.execute(
+        "SELECT b.name, v.chapter, v.verse, t.position, t.surface, t.lemma_id, l.language "
+        "FROM token t JOIN verse v ON v.id = t.verse_id JOIN book b ON b.id = v.book_id "
+        "LEFT JOIN lemma l ON l.id = t.lemma_id "
+        "WHERE v.versification = 'kjv' ORDER BY b.id, v.chapter, v.verse, t.position"
+    ):
+        words_by_verse.setdefault((book, chapter), {}).setdefault(verse, []).append(
+            {"s": surface, "k": lemma_slug.get(lemma_id), "l": language}
+        )
+
+    # One English gloss per word, so the verse view can show what each original
+    # word means without a second request.
+    word_gloss = {}
+    for book, chapter, verse, position, text in conn.execute(
+        "SELECT b.name, v.chapter, v.verse, t.position, g.text FROM gloss g "
+        "JOIN token t ON t.id = g.token_id JOIN verse v ON v.id = t.verse_id "
+        "JOIN book b ON b.id = v.book_id WHERE g.version_id = 'cherith-en'"
+    ):
+        word_gloss[(book, chapter, verse, position)] = text
+
+    text_by_chapter = {}
+    for book, chapter, verse, version_id, text in conn.execute(
+        "SELECT b.name, v.chapter, v.verse, r.version_id, r.text FROM rendering r "
+        "JOIN verse v ON v.id = r.verse_id JOIN book b ON b.id = v.book_id"
+    ):
+        text_by_chapter.setdefault((book, chapter), {}).setdefault(verse, {})[version_id] = text
+
+    chapters_written = 0
+    for key in sorted(set(words_by_verse) | set(text_by_chapter)):
+        book, chapter = key
+        words = words_by_verse.get(key, {})
+        texts = text_by_chapter.get(key, {})
+        verses = []
+        for number in sorted(set(words) | set(texts)):
+            entries = words.get(number, [])
+            for position, entry in enumerate(entries, start=1):
+                gloss = word_gloss.get((book, chapter, number, position))
+                if gloss and gloss.strip("*").strip():
+                    entry["g"] = gloss
+            verses.append({"v": number, "w": entries, "t": texts.get(number, {})})
+
+        slug = f"{book}.{chapter}".replace(" ", "_")
+        (chapter_dir / f"{slug}.json").write_text(
+            json.dumps({"book": book, "chapter": chapter, "verses": verses},
+                       ensure_ascii=False, separators=(",", ":")),
+            encoding="utf-8",
+        )
+        chapters_written += 1
+
+    books = [
+        {"name": name, "abbr": abbr, "chapters": chapters, "testament": testament,
+         "genre": genre}
+        for name, abbr, chapters, testament, genre in conn.execute(
+            "SELECT name, abbr, chapters, testament, genre FROM book ORDER BY id"
+        )
+    ]
+    (out_dir / "books.json").write_text(
+        json.dumps({"books": books, "genres": dict(conn.execute(
+            "SELECT DISTINCT genre, genre FROM book WHERE genre IS NOT NULL"))},
+            ensure_ascii=False, separators=(",", ":")),
+        encoding="utf-8",
+    )
+
     stats = {
         "lemmas": len(index),
         "hebrew_tokens": conn.execute(
@@ -257,6 +360,7 @@ def build(conn, out_dir):
         "canons": {name: len(books) for name, books in canons.items()},
         "glosses": conn.execute("SELECT COUNT(*) FROM gloss").fetchone()[0],
         "septuagint_links": conn.execute("SELECT COUNT(*) FROM lxx_equivalent").fetchone()[0],
+        "chapters": chapters_written,
     }
     (out_dir / "stats.json").write_text(json.dumps(stats), encoding="utf-8")
 

@@ -8,6 +8,7 @@ on a clean checkout (and in CI) without a 47 MB download.
 """
 
 import json
+import re
 import sqlite3
 import sys
 import tempfile
@@ -51,6 +52,12 @@ class CanonTests(unittest.TestCase):
         protestant = self.protestant()
         self.assertEqual(sum(b["testament"] == "OT" for b in protestant), 39)
         self.assertEqual(sum(b["testament"] == "NT" for b in protestant), 27)
+
+    def test_every_book_has_a_genre(self):
+        # Genre drives the distribution summary; a missing one would silently
+        # bucket a book as "other".
+        for book in self.books:
+            self.assertTrue(book.get("genre"), f"{book['name']} has no genre")
 
     def test_names_and_abbrs_unique(self):
         self.assertEqual(len({b["name"] for b in self.books}), len(self.books))
@@ -249,6 +256,58 @@ class StatsReportTests(unittest.TestCase):
             self.skipTest("site not built")
         stats = json.loads(site.read_text())
         self.assertEqual(len(report_stats.format_stats(stats)), len(stats))
+
+
+class BuiltSiteTests(unittest.TestCase):
+    """Checks on the generated site, which is what a reader actually gets."""
+
+    SITE = ROOT / "site"
+
+    def setUp(self):
+        if not (self.SITE / "index.json").exists():
+            self.skipTest("site not built")
+
+    def test_chapter_files_carry_text_and_words(self):
+        path = self.SITE / "chapter" / "John.3.json"
+        if not path.exists():
+            self.skipTest("chapter files not built")
+        data = json.loads(path.read_text())
+        verse = next(v for v in data["verses"] if v["v"] == 16)
+        self.assertIn("kjv", verse["t"])
+        self.assertTrue(verse["w"], "no original-language words for John 3:16")
+        self.assertTrue(any(w.get("k") for w in verse["w"]), "no word links through to a study")
+
+    def test_no_asterisk_placeholder_reaches_a_gloss(self):
+        # MACULA writes "*" where a word has no gloss; rendering that under a
+        # word reads as a footnote marker that means nothing.
+        path = self.SITE / "chapter" / "John.3.json"
+        if not path.exists():
+            self.skipTest("chapter files not built")
+        data = json.loads(path.read_text())
+        for verse in data["verses"]:
+            for word in verse["w"]:
+                self.assertNotEqual((word.get("g") or "").strip(), "*")
+
+    def test_lemma_pages_carry_the_new_views(self):
+        path = self.SITE / "lemma" / "G26.json"
+        if not path.exists():
+            self.skipTest("lemma files not built")
+        data = json.loads(path.read_text())
+        self.assertTrue(data.get("by_genre"), "no genre summary")
+        self.assertIn("hapax", data)
+        self.assertTrue(data.get("earliest_written"), "no composition-order origin")
+
+    def test_featured_words_all_exist(self):
+        # The landing page is the first thing a reader sees; a dead card there
+        # is worse than no card.
+        index = json.loads((self.SITE / "index.json").read_text())
+        slugs = {e["slug"] for e in index["lemmas"]}
+        app = (ROOT / "web" / "app.js").read_text()
+        featured = re.findall(r"slug: '([^']+)'", app)
+        self.assertTrue(featured, "no featured words found in app.js")
+        for slug in featured:
+            self.assertIn(slug, slugs, f"featured word {slug} is not in the index")
+            self.assertTrue((self.SITE / "lemma" / f"{slug}.json").exists(), slug)
 
 
 class GreekNormalisationTests(unittest.TestCase):
