@@ -775,6 +775,68 @@ class Ingestor:
         print(f"  bdb: {len(rows)} senses from Brown-Driver-Briggs")
 
 
+    def ingest_abbott_smith(self):
+        """Load Abbott-Smith as a second Greek sense authority.
+
+        Greek words had only Strong's while Hebrew words already had two
+        dictionaries, so Greek pages could not show the disagreement that is the
+        point of the app. Abbott-Smith is public domain and carries its Strong's
+        number in each entry's `n` attribute ("Ἀαρών|G2"), which is what makes it
+        linkable at all.
+        """
+        source_id = "abbott-smith"
+        path = RAW / "lexicons" / "abbott-smith.tei.xml"
+        if not path.exists():
+            print("  missing Abbott-Smith file -- run fetch_sources.py first")
+            return
+
+        self.conn.execute("DELETE FROM sense WHERE source_id = ?", (source_id,))
+
+        tree = ET.parse(path)
+        root = tree.getroot()
+        namespace = root.tag.split("}")[0][1:] if "}" in root.tag else ""
+
+        def qualified(name):
+            return f"{{{namespace}}}{name}" if namespace else name
+
+        lemmas = {
+            strongs: lemma_id
+            for lemma_id, strongs in self.conn.execute(
+                "SELECT id, strongs FROM lemma WHERE language='grc' AND strongs IS NOT NULL"
+            )
+        }
+
+        rows = []
+        for entry in tree.iter(qualified("entry")):
+            name = entry.get("n") or ""
+            _, _, strongs = name.partition("|")
+            strongs = strongs.strip()
+            if not (strongs.startswith("G") and strongs[1:].isdigit()):
+                continue
+            lemma_id = lemmas.get(f"G{int(strongs[1:])}")
+            if lemma_id is None:
+                continue
+
+            glosses = []
+            for gloss in entry.iter(qualified("gloss")):
+                text = " ".join("".join(gloss.itertext()).split())
+                if text and text not in glosses:
+                    glosses.append(text)
+            if not glosses:
+                continue
+
+            full = " ".join("".join(entry.itertext()).split())
+            for ordering, gloss in enumerate(glosses[:6]):
+                rows.append((lemma_id, gloss[:200], full[:400], source_id, ordering))
+
+        self.conn.executemany(
+            "INSERT INTO sense (lemma_id, gloss, definition, source_id, attested, ordering) "
+            "VALUES (?, ?, ?, ?, 1, ?)",
+            rows,
+        )
+        print(f"  abbott-smith: {len(rows)} senses")
+
+
 DATASETS = {
     "strongs": "ingest_strongs",
     "oshb": "ingest_oshb",
@@ -784,6 +846,7 @@ DATASETS = {
     "macula": "ingest_macula",
     "macula-hebrew": "ingest_macula_hebrew",
     "bdb": "ingest_bdb",
+    "abbott-smith": "ingest_abbott_smith",
 }
 
 
@@ -797,8 +860,8 @@ def main():
     if not args.dataset and not args.all:
         parser.error("pass --dataset <name> or --all")
 
-    order = (["strongs", "bdb", "oshb", "morphgnt", "macula", "macula-hebrew",
-              "translations", "lxx"] if args.all else [args.dataset])
+    order = (["strongs", "bdb", "abbott-smith", "oshb", "morphgnt", "macula",
+              "macula-hebrew", "translations", "lxx"] if args.all else [args.dataset])
 
     conn = sqlite3.connect(args.db)
     conn.execute("PRAGMA foreign_keys = ON")

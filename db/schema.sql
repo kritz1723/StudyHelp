@@ -59,7 +59,10 @@ CREATE TABLE IF NOT EXISTS book (
     name        TEXT NOT NULL UNIQUE,
     abbr        TEXT NOT NULL,
     chapters    INTEGER NOT NULL,
-    testament   TEXT NOT NULL CHECK (testament IN ('OT', 'NT'))
+    testament   TEXT NOT NULL CHECK (testament IN ('OT', 'NT')),
+    -- Genre groups the distribution more usefully than a list of book names:
+    -- a word concentrated in law is a legal term, and the grouping says so.
+    genre       TEXT
 );
 
 -- Which books count as scripture is a confessional question, not a fact, so
