@@ -38,9 +38,11 @@ def build(conn, out_dir):
 
     sources = {
         row[0]: {"id": row[0], "name": row[1], "license": row[2],
-                 "attribution": row[3], "url": row[4] or row[5]}
+                 "attribution": row[3], "url": row[4] or row[5],
+                 "witness": row[6], "tradition": row[7], "verified": row[8]}
         for row in conn.execute(
-            "SELECT id, name, license, attribution, repository, homepage FROM source"
+            "SELECT id, name, license, attribution, repository, homepage, "
+            "witness, tradition, verified FROM source"
         )
     }
 
@@ -118,9 +120,9 @@ def build(conn, out_dir):
     }
     versions = [
         {"id": vid, "name": name, "language": language, "year": year, "era": era,
-         "from": translated_from, "caution": cautions.get(vid)}
-        for vid, name, language, year, era, translated_from in conn.execute(
-            "SELECT id, name, language, year, era, translated_from FROM version "
+         "from": translated_from, "tradition": tradition, "caution": cautions.get(vid)}
+        for vid, name, language, year, era, translated_from, tradition in conn.execute(
+            "SELECT id, name, language, year, era, translated_from, tradition FROM version "
             "ORDER BY CASE WHEN year IS NULL THEN 9999 ELSE year END"
         )
     ]
@@ -132,6 +134,7 @@ def build(conn, out_dir):
     for lemma_id, version_id, text, count in conn.execute(
         "SELECT t.lemma_id, g.version_id, g.text, COUNT(*) c FROM gloss g "
         "JOIN token t ON t.id = g.token_id WHERE t.lemma_id IS NOT NULL "
+        "AND g.version_id NOT LIKE 'interlinear-%' "
         "GROUP BY t.lemma_id, g.version_id, g.text ORDER BY t.lemma_id, g.version_id, c DESC"
     ):
         renderings_by_lemma.setdefault(lemma_id, {}).setdefault(version_id, []).append([text, count])
@@ -165,6 +168,33 @@ def build(conn, out_dir):
         "ORDER BY e.greek_lemma_id, c DESC"
     ):
         from_hebrew.setdefault(greek_lemma_id, []).append([hebrew, xlit, count])
+
+    # Words worth comparing are the ones English collapses into the same word.
+    # That collapse is the app's whole thesis, so it is also the best possible
+    # basis for "set this against another word".
+    same_english = {}
+    for lemma_id, entries in renderings_by_lemma.items():
+        english = entries.get("cherith-en") or entries.get("berean-interlinear") or []
+        if english:
+            key = english[0][0].strip().lower()
+            if key and len(key) > 2:
+                same_english.setdefault(key, []).append(lemma_id)
+
+    neighbours = {}
+    for key, ids in same_english.items():
+        if len(ids) < 2:
+            continue
+        ranked = sorted(ids, key=lambda i: -counts.get(i, 0))
+        for lemma_id in ids:
+            neighbours[lemma_id] = [i for i in ranked if i != lemma_id][:4]
+
+    lemma_slug_for, lemma_text, lemma_xlit = {}, {}, {}
+    for lemma_id, lemma, xlit, strongs in conn.execute(
+        "SELECT id, lemma, transliteration, strongs FROM lemma"
+    ):
+        lemma_slug_for[lemma_id] = strongs or f"L{lemma_id}"
+        lemma_text[lemma_id] = lemma
+        lemma_xlit[lemma_id] = xlit
 
     index = []
     written = 0
@@ -216,6 +246,12 @@ def build(conn, out_dir):
             "by_genre": sorted(by_genre.get(lemma_id, {}).items(), key=lambda kv: -kv[1]),
             "earliest_written": earliest_written.get(lemma_id, {}),
             "hapax": count == 1,
+            "compare_with": [
+                {"slug": lemma_slug_for.get(other), "lemma": lemma_text.get(other),
+                 "xlit": lemma_xlit.get(other), "n": counts.get(other, 0)}
+                for other in neighbours.get(lemma_id, [])
+                if lemma_slug_for.get(other)
+            ],
             "to_greek": to_greek.get(lemma_id, [])[:12],
             "from_hebrew": from_hebrew.get(lemma_id, [])[:12],
             "renderings": {
@@ -297,12 +333,13 @@ def build(conn, out_dir):
     # One English gloss per word, so the verse view can show what each original
     # word means without a second request.
     word_gloss = {}
-    for book, chapter, verse, position, text in conn.execute(
-        "SELECT b.name, v.chapter, v.verse, t.position, g.text FROM gloss g "
-        "JOIN token t ON t.id = g.token_id JOIN verse v ON v.id = t.verse_id "
-        "JOIN book b ON b.id = v.book_id WHERE g.version_id = 'cherith-en'"
-    ):
-        word_gloss[(book, chapter, verse, position)] = text
+    for version_id in ("cherith-en", "interlinear-en"):
+        for book, chapter, verse, position, text in conn.execute(
+            "SELECT b.name, v.chapter, v.verse, t.position, g.text FROM gloss g "
+            "JOIN token t ON t.id = g.token_id JOIN verse v ON v.id = t.verse_id "
+            "JOIN book b ON b.id = v.book_id WHERE g.version_id = ?", (version_id,)
+        ):
+            word_gloss[(book, chapter, verse, position)] = text
 
     text_by_chapter = {}
     for book, chapter, verse, version_id, text in conn.execute(
@@ -366,6 +403,9 @@ def build(conn, out_dir):
 
     for asset in WEB.iterdir():
         shutil.copy2(asset, out_dir / asset.name)
+
+    # The reference parser is shared with the tests rather than duplicated.
+    shutil.copy2(ROOT / "bible-study" / "js" / "books.js", out_dir / "books.js")
 
     print(f"Built {out_dir}: {written} lemma files, {stats['lemmas']} indexed.")
     return stats

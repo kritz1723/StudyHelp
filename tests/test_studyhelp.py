@@ -110,6 +110,48 @@ class RegistryTests(unittest.TestCase):
                 f"{column} is permission-only data and must not be ingested",
             )
 
+    def test_everything_displayed_traces_to_a_licensed_source(self):
+        """No claim may reach a reader from a source without a stated licence.
+
+        This is the compliance check the whole premise rests on: the app's
+        promise is that every claim names where it came from, and that is only
+        true if every source that can reach the page carries a licence.
+        """
+        registry = {s["id"]: s for s in self.sources}
+        site = ROOT / "site" / "index.json"
+        if not site.exists():
+            self.skipTest("site not built")
+
+        displayed = json.loads(site.read_text())["sources"]
+        for source_id, shown in displayed.items():
+            self.assertIn(source_id, registry, f"{source_id} is displayed but unregistered")
+            self.assertTrue(shown.get("license"), f"{source_id} is displayed with no licence")
+            self.assertTrue(shown.get("name"), f"{source_id} is displayed with no name")
+
+    def test_attribution_is_generated_not_handwritten(self):
+        # Every CC-BY and CC-BY-SA source here requires visible credit, and a
+        # hand-kept list goes stale the first time a source is added.
+        app = (ROOT / "web" / "app.js").read_text()
+        self.assertIn("renderSources", app)
+        self.assertIn("SOURCES", app)
+
+    def test_share_alike_sources_are_identified(self):
+        """Share-alike licences carry obligations, so they must be visible."""
+        share_alike = [s["id"] for s in self.sources if "SA" in (s.get("license") or "")]
+        self.assertTrue(share_alike, "expected at least one share-alike source")
+        for source_id in share_alike:
+            source = next(s for s in self.sources if s["id"] == source_id)
+            self.assertTrue(source.get("attribution") or source.get("notes"),
+                            f"{source_id} is share-alike with no attribution recorded")
+
+    def test_every_source_declares_its_witness(self):
+        # A tagged original-language text and an aggregator's repackaging should
+        # not carry equal weight, and the registry should say which is which.
+        for source in self.sources:
+            self.assertIn(source.get("witness"),
+                          {"primary", "translation", "derivative", "reference"},
+                          f"{source['id']} has no witness classification")
+
     def test_no_noncommercial_source_is_fetched(self):
         """A NonCommercial or declaration-gated source must never be in the fetch list.
 
