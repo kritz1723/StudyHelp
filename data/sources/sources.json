@@ -19,7 +19,8 @@
       "tier": 1,
       "priority": "critical",
       "verified": "2026-08-31",
-      "notes": "Blocking dependency for the origin and usage views on the OT."
+      "notes": "Blocking dependency for the origin and usage views on the OT.",
+      "witness": "primary"
     },
     {
       "id": "stepbible-data",
@@ -37,7 +38,8 @@
       "tier": 1,
       "priority": "critical",
       "verified": "2026-08-31",
-      "notes": "Strongest single dataset: tagging and lexicon glosses under one permissive licence. Good primary spine; cross-check against OSHB and MorphGNT."
+      "notes": "Strongest single dataset: tagging and lexicon glosses under one permissive licence. Good primary spine; cross-check against OSHB and MorphGNT.",
+      "witness": "primary"
     },
     {
       "id": "morphgnt-sblgnt",
@@ -55,7 +57,8 @@
       "tier": 1,
       "priority": "critical",
       "verified": "2026-08-31",
-      "notes": "The base text carries the SBLGNT EULA, which is NOT the same as the CC licence on the tagging. Review the EULA before redistributing the text itself; the tagging is separable."
+      "notes": "The base text carries the SBLGNT EULA, which is NOT the same as the CC licence on the tagging. Review the EULA before redistributing the text itself; the tagging is separable.",
+      "witness": "primary"
     },
     {
       "id": "openscriptures-strongs",
@@ -73,7 +76,8 @@
       "tier": 1,
       "priority": "critical",
       "verified": "2026-08-31",
-      "notes": "Use Strong's numbers as the interchange key between datasets, not as a scholarly sense authority."
+      "notes": "Use Strong's numbers as the interchange key between datasets, not as a scholarly sense authority.",
+      "witness": "primary"
     },
     {
       "id": "openscriptures-hebrewlexicon",
@@ -90,7 +94,8 @@
       "tier": 1,
       "priority": "high",
       "verified": "2026-08-31",
-      "notes": "BDB is the workhorse Hebrew sense source for the chronology view."
+      "notes": "BDB is the workhorse Hebrew sense source for the chronology view.",
+      "witness": "primary"
     },
     {
       "id": "abbott-smith",
@@ -107,7 +112,8 @@
       "tier": 1,
       "priority": "high",
       "verified": "2026-09-09",
-      "notes": "Entries carry their Strong's number in the entry's n attribute, which is what makes them linkable. Gives Greek words the second, independent opinion that Hebrew words already have from Brown-Driver-Briggs."
+      "notes": "Entries carry their Strong's number in the entry's n attribute, which is what makes them linkable. Gives Greek words the second, independent opinion that Hebrew words already have from Brown-Driver-Briggs.",
+      "witness": "primary"
     },
     {
       "id": "lsj-perseus",
@@ -124,7 +130,8 @@
       "tier": 1,
       "priority": "high",
       "verified": "unverified",
-      "notes": "Also available as TFLSJ within STEPBible-Data. Classical attestation is the strongest evidence for the 'how it changed over time' view."
+      "notes": "Also available as TFLSJ within STEPBible-Data. Classical attestation is the strongest evidence for the 'how it changed over time' view. Not fetched or used. Verify only if the Perseus digitisation is ingested.",
+      "witness": "primary"
     },
     {
       "id": "lxx-rahlfs-1935",
@@ -142,7 +149,8 @@
       "tier": 3,
       "priority": "blocked",
       "verified": "2026-08-31",
-      "notes": "UNUSABLE under this project's open-source-only rule. The packaging is NonCommercial, and the underlying CATSS/CCAT text requires agreeing to a user declaration before download. It carries the morphology and Strong's tags the transmission chain needs, which makes this the most costly licence problem in the project. Do not fetch."
+      "notes": "UNUSABLE under this project's open-source-only rule. The packaging is NonCommercial, and the underlying CATSS/CCAT text requires agreeing to a user declaration before download. It carries the morphology and Strong's tags the transmission chain needs, which makes this the most costly licence problem in the project. Do not fetch.",
+      "witness": "primary"
     },
     {
       "id": "lxx-swete-1930",
@@ -159,7 +167,9 @@
       "tier": 1,
       "priority": "critical",
       "verified": "2026-08-31",
-      "notes": "Usable. Word list plus versification index, with NO lemma or morphology tagging in the published files -- so it gives the LXX text but cannot yet carry lemma-level bridging between Hebrew and Greek."
+      "notes": "Usable. Word list plus versification index, with NO lemma or morphology tagging in the published files -- so it gives the LXX text but cannot yet carry lemma-level bridging between Hebrew and Greek.",
+      "tradition": "Hellenistic Judaism",
+      "witness": "primary"
     },
     {
       "id": "bsb",
@@ -181,7 +191,9 @@
       "tier": 1,
       "priority": "critical",
       "verified": "2026-08-31",
-      "notes": "The best modern-English option that is genuinely free. Fills the slot NIV/ESV would otherwise occupy, with no licence risk."
+      "notes": "The best modern-English option that is genuinely free. Fills the slot NIV/ESV would otherwise occupy, with no licence risk.",
+      "tradition": "Contemporary evangelical, critical text",
+      "witness": "translation"
     },
     {
       "id": "kjv-1769",
@@ -199,8 +211,10 @@
       ],
       "tier": 1,
       "priority": "critical",
-      "verified": "unverified",
-      "notes": "UK Crown copyright (letters patent) is a real if rarely enforced constraint — record it rather than assuming worldwide public domain."
+      "verified": "2026-09-15",
+      "notes": "UK Crown copyright (letters patent) is a real if rarely enforced constraint — record it rather than assuming worldwide public domain. Published 1769; public domain by age outside the UK. UK Crown letters patent still apply within the UK — recorded, not resolved.",
+      "tradition": "Anglican, Textus Receptus",
+      "witness": "translation"
     },
     {
       "id": "asv-1901",
@@ -212,7 +226,10 @@
       "license": "Public domain",
       "tier": 1,
       "priority": "high",
-      "verified": "unverified"
+      "verified": "2026-09-15",
+      "tradition": "Revision movement, critical text",
+      "witness": "translation",
+      "notes": "Published 1901; public domain by age."
     },
     {
       "id": "ylt-1898",
@@ -225,7 +242,10 @@
       "license": "Public domain",
       "tier": 1,
       "priority": "medium",
-      "verified": "unverified"
+      "verified": "2026-09-15",
+      "tradition": "Literalist, Textus Receptus",
+      "witness": "translation",
+      "notes": "Published 1898; public domain by age."
     },
     {
       "id": "web",
@@ -236,7 +256,9 @@
       "license": "Public domain",
       "tier": 1,
       "priority": "medium",
-      "verified": "unverified"
+      "verified": "unverified",
+      "witness": "translation",
+      "notes": "Not fetched: no World English Bible export was available from the aggregator used."
     },
     {
       "id": "geneva-1599",
@@ -250,7 +272,8 @@
       "tier": 1,
       "priority": "high",
       "verified": "unverified",
-      "notes": "Era coverage between Tyndale and the KJV; important for the drift timeline."
+      "notes": "Era coverage between Tyndale and the KJV; important for the drift timeline. Not fetched: the aggregator has no Geneva export. Era coverage between Tyndale and the KJV is therefore missing.",
+      "witness": "translation"
     },
     {
       "id": "tyndale-1526",
@@ -263,8 +286,10 @@
       "license": "Public domain",
       "tier": 1,
       "priority": "high",
-      "verified": "unverified",
-      "notes": "Digitisations vary in quality and spelling normalisation; evaluate before ingesting."
+      "verified": "2026-09-15",
+      "notes": "Digitisations vary in quality and spelling normalisation; evaluate before ingesting. Published 1526; public domain by age.",
+      "tradition": "Reformation English, from Greek and Hebrew",
+      "witness": "translation"
     },
     {
       "id": "wycliffe-1395",
@@ -277,8 +302,10 @@
       "license": "Public domain",
       "tier": 1,
       "priority": "medium",
-      "verified": "unverified",
-      "notes": "Translated from Latin, not the original languages — must be labelled as such or it distorts the drift view."
+      "verified": "2026-09-15",
+      "notes": "Translated from Latin, not the original languages — must be labelled as such or it distorts the drift view. Translated c. 1395; public domain by age.",
+      "tradition": "Pre-Reformation English, from the Latin",
+      "witness": "translation"
     },
     {
       "id": "clementine-vulgate",
@@ -290,7 +317,10 @@
       "license": "Public domain",
       "tier": 1,
       "priority": "medium",
-      "verified": "unverified"
+      "verified": "2026-09-15",
+      "tradition": "Latin church",
+      "witness": "primary",
+      "notes": "Published 1592; public domain by age."
     },
     {
       "id": "unfoldingword-ult-ust",
@@ -305,7 +335,8 @@
       "tier": 2,
       "priority": "high",
       "verified": "unverified",
-      "notes": "The alignment data is the valuable part: it maps English surface forms to original-language tokens, which is exactly the gloss layer."
+      "notes": "The alignment data is the valuable part: it maps English surface forms to original-language tokens, which is exactly the gloss layer. Could not be reached: git.door43.org is blocked by this network policy and there is no GitHub mirror.",
+      "witness": "translation"
     },
     {
       "id": "scrollmapper-bible-databases",
@@ -313,7 +344,7 @@
       "kind": "aggregator",
       "language": "en",
       "description": "Packaged public-domain translations (KJV, ASV, YLT, Darby, WEB and others) in ready-to-load SQL/JSON.",
-      "license": "Varies by contained translation; packaging is open",
+      "license": "MIT (repository packaging); contained texts public domain by age",
       "repository": "https://github.com/scrollmapper/bible_databases",
       "formats": [
         "SQL",
@@ -322,8 +353,9 @@
       ],
       "tier": 1,
       "priority": "high",
-      "verified": "unverified",
-      "notes": "Convenience route for bulk-loading the public-domain English versions. Aggregators can silently alter text — treat as a convenience layer and record the upstream edition, never cite the aggregator as the authority."
+      "verified": "2026-09-15",
+      "notes": "Repository LICENSE is MIT. Note a discrepancy recorded rather than resolved: the bundled SQLite marks the KJV row \"GPL\", which cannot restrict a public-domain text but does describe the packaging. Treated as a convenience layer; the upstream edition is cited as the authority, never this aggregator.",
+      "witness": "derivative"
     },
     {
       "id": "awesome-bible-developer-resources",
@@ -335,7 +367,8 @@
       "tier": "n/a",
       "priority": "reference",
       "verified": "2026-08-31",
-      "notes": "Not a data source. Use to find candidates, then register them here individually with their own licence."
+      "notes": "Not a data source. Use to find candidates, then register them here individually with their own licence.",
+      "witness": "reference"
     },
     {
       "id": "dating-traditional",
@@ -345,8 +378,9 @@
       "license": "n/a (compiled orientation data, not a reproduced work)",
       "tier": "n/a",
       "priority": "high",
-      "verified": "unverified",
-      "notes": "Approximate ranges compiled for orientation. Needs review against named reference works before being presented as scholarship."
+      "verified": "2026-09-15",
+      "notes": "Approximate ranges compiled for orientation. Needs review against named reference works before being presented as scholarship. Compiled for this project rather than reproduced from a work, so there is no third-party licence to confirm. The scholarship behind the ranges still needs review against named reference works — that is a separate, open item.",
+      "witness": "reference"
     },
     {
       "id": "dating-critical",
@@ -356,8 +390,9 @@
       "license": "n/a (compiled orientation data, not a reproduced work)",
       "tier": "n/a",
       "priority": "high",
-      "verified": "unverified",
-      "notes": "Approximate ranges compiled for orientation. Needs review against named reference works before being presented as scholarship."
+      "verified": "2026-09-15",
+      "notes": "Approximate ranges compiled for orientation. Needs review against named reference works before being presented as scholarship. Compiled for this project rather than reproduced from a work, so there is no third-party licence to confirm. The scholarship behind the ranges still needs review against named reference works — that is a separate, open item.",
+      "witness": "reference"
     },
     {
       "id": "akjv",
@@ -370,7 +405,9 @@
       "tier": 1,
       "priority": "low",
       "verified": "unverified",
-      "notes": "Modernised KJV wording; useful as a spelling-normalised bridge to the 1769 text."
+      "notes": "Modernised KJV wording; useful as a spelling-normalised bridge to the 1769 text. Modern derivative of a public-domain text; the digitiser states public domain but this has not been confirmed against a licence document.",
+      "tradition": "Anglican, modernised spelling",
+      "witness": "translation"
     },
     {
       "id": "nheb",
@@ -381,7 +418,10 @@
       "license": "Public domain",
       "tier": 1,
       "priority": "low",
-      "verified": "unverified"
+      "verified": "unverified",
+      "tradition": "Contemporary, critical text",
+      "witness": "translation",
+      "notes": "Stated public domain by the aggregator; not confirmed against a licence document."
     },
     {
       "id": "openscriptures-lxx-lemmas",
@@ -395,7 +435,8 @@
       "tier": 2,
       "priority": "high",
       "verified": "2026-08-31",
-      "notes": "The lemmas are openly licensed, but they are keyed to the CCAT text, which is not. Openly licensed keys into a closed text do not by themselves unlock lemma-level LXX bridging."
+      "notes": "The lemmas are openly licensed, but they are keyed to the CCAT text, which is not. Openly licensed keys into a closed text do not by themselves unlock lemma-level LXX bridging.",
+      "witness": "primary"
     },
     {
       "id": "macula-greek",
@@ -413,7 +454,8 @@
       "tier": 1,
       "priority": "critical",
       "verified": "2026-08-31",
-      "notes": "Carries explicit Strong's numbers for every word, replacing the diacritic-folding heuristic previously used to link Greek tokens. Note one nuance recorded rather than glossed over: the Louw-Nida word-sense data within MACULA comes from the UBS MARBLE project and is marked 'used with permission' rather than CC BY, so it is not treated as freely redistributable here."
+      "notes": "Carries explicit Strong's numbers for every word, replacing the diacritic-folding heuristic previously used to link Greek tokens. Note one nuance recorded rather than glossed over: the Louw-Nida word-sense data within MACULA comes from the UBS MARBLE project and is marked 'used with permission' rather than CC BY, so it is not treated as freely redistributable here.",
+      "witness": "primary"
     },
     {
       "id": "berean-interlinear",
@@ -427,7 +469,9 @@
       "tier": 1,
       "priority": "high",
       "verified": "2026-08-31",
-      "notes": "Reaches us inside MACULA; the gloss column is the Berean Interlinear's."
+      "notes": "Reaches us inside MACULA; the gloss column is the Berean Interlinear's.",
+      "tradition": "Contemporary interlinear",
+      "witness": "derivative"
     },
     {
       "id": "cherith-glosses",
@@ -442,7 +486,9 @@
       "tier": 1,
       "priority": "high",
       "verified": "2026-08-31",
-      "notes": "The Mandarin glosses are the project's first non-European-language data."
+      "notes": "The Mandarin glosses are the project's first non-European-language data.",
+      "tradition": "Contemporary glosses",
+      "witness": "derivative"
     },
     {
       "id": "macula-hebrew",
@@ -460,7 +506,8 @@
       "tier": 1,
       "priority": "critical",
       "verified": "2026-09-01",
-      "notes": "Carries the Septuagint equivalent per Hebrew word, which supplies the Hebrew-to-Greek link the transmission chain needs without requiring the licence-blocked tagged Septuagint. Distributed via Git LFS, so it is fetched from the media host rather than the raw host."
+      "notes": "Carries the Septuagint equivalent per Hebrew word, which supplies the Hebrew-to-Greek link the transmission chain needs without requiring the licence-blocked tagged Septuagint. Distributed via Git LFS, so it is fetched from the media host rather than the raw host.",
+      "witness": "primary"
     }
   ]
 }

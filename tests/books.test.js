@@ -49,6 +49,20 @@ check('chapter clamps to book length', parseReference('Jude 5').ref, 'Jude 1');
 check('psalms upper bound', parseReference('Psalms 200').ref, 'Psalms 150');
 check('unparseable input', parseReference('!!!'), null);
 
+// books.js and app.js both load as classic scripts into one global scope, so a
+// name declared in both is a SyntaxError that kills the page. This caught two.
+const appSource = fs.readFileSync(path.join(__dirname, '..', 'web', 'app.js'), 'utf8');
+const booksGlobals = [...source.matchAll(/^(?:const|let|var|function)\s+([A-Za-z_$][\w$]*)/gm)]
+  .map((m) => m[1]);
+const appGlobals = [...appSource.matchAll(/^(?:const|let|var|function)\s+([A-Za-z_$][\w$]*)/gm)]
+  .map((m) => m[1]);
+const appDestructured = [...appSource.matchAll(/^(?:const|let)\s+([A-Za-z_$][\w$]*)\s*=/gm)]
+  .map((m) => m[1]);
+const clashes = booksGlobals.filter(
+  (name) => appGlobals.includes(name) || appDestructured.includes(name)
+);
+check('no global name is declared by both scripts', clashes, []);
+
 if (failures) {
   console.error(`\n${failures} failure(s)`);
   process.exit(1);

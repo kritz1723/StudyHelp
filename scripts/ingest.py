@@ -588,10 +588,15 @@ class Ingestor:
         the tagged Septuagint edition that licensing puts out of reach.
 
         MACULA counts morphemes where OSHB counts words, so a Hebrew word with
-        prefixes appears here as several rows sharing one word index. They are
-        grouped back into the word, and the LAST segment is treated as the head:
-        Hebrew prefixes precede the stem, so the final segment carries the sense,
-        which is also how the OSHB lemma was read.
+        affixes appears here as several rows sharing one word index. They are
+        grouped back into the word, and the head is the morpheme whose Strong's
+        number matches the token's own lemma.
+
+        Taking the last morpheme instead looks right and is not: Hebrew prefixes
+        precede the stem but suffixes follow it, so on a word like chesed with a
+        possessive the last morpheme is "his". That silently made "his" the
+        word's commonest English rendering, and would have attributed the
+        suffix's Septuagint equivalent to the noun.
         """
         source_id = "macula-hebrew"
         path = RAW / "macula" / "macula-hebrew.tsv"
@@ -612,6 +617,8 @@ class Ingestor:
         for version_id, gloss_source, name, language in (
             ("cherith-en", "cherith-glosses", "Cherith Glosses (English)", "en"),
             ("cherith-zh", "cherith-glosses", "Cherith Glosses (Mandarin)", "zh"),
+            ("interlinear-en", "cherith-glosses", "Reading gloss (English)", "en"),
+            ("interlinear-zh", "cherith-glosses", "Reading gloss (Mandarin)", "zh"),
         ):
             self.conn.execute(
                 "INSERT INTO version (id, source_id, name, language, year, era, translated_from) "
@@ -621,11 +628,12 @@ class Ingestor:
             )
 
         tokens = {}
-        for token_id, book_id, chapter, verse, position in self.conn.execute(
-            "SELECT t.id, v.book_id, v.chapter, v.verse, t.position FROM token t "
-            "JOIN verse v ON v.id = t.verse_id WHERE t.source_id = 'oshb-morphhb'"
+        for token_id, book_id, chapter, verse, position, strongs in self.conn.execute(
+            "SELECT t.id, v.book_id, v.chapter, v.verse, t.position, l.strongs FROM token t "
+            "JOIN verse v ON v.id = t.verse_id LEFT JOIN lemma l ON l.id = t.lemma_id "
+            "WHERE t.source_id = 'oshb-morphhb'"
         ):
-            tokens[(book_id, chapter, verse, position)] = token_id
+            tokens[(book_id, chapter, verse, position)] = (token_id, strongs)
 
         greek_lemma = {
             strongs: lemma_id
@@ -651,16 +659,40 @@ class Ingestor:
         gloss_rows = []
         bridge_rows = []
         for key, rows in groups.items():
-            token_id = tokens.get(key)
-            if token_id is None:
+            entry = tokens.get(key)
+            if entry is None:
                 continue
+            token_id, token_strongs = entry
             matched += 1
-            head_row = rows[-1]
 
-            for column, version_id in (("english", "cherith-en"), ("mandarin", "cherith-zh")):
-                text = " ".join(r[column].strip() for r in rows if r.get(column)).strip()
-                if text:
-                    gloss_rows.append((token_id, version_id, text, "cherith-glosses"))
+            # Fallback when no Strong's number matches: the stem is the longest
+            # morpheme, since affixes are a letter or two. Falling back to the
+            # last row would pick a possessive suffix.
+            head_row = max(rows, key=lambda r: len((r.get("text") or "").strip()))
+            if token_strongs and token_strongs.startswith("H"):
+                wanted = token_strongs[1:].lstrip("0")
+                for row in rows:
+                    number = (row.get("strongnumberx") or "").strip().lstrip("0")
+                    # MACULA appends a homonym letter to some numbers ("0871a").
+                    if number.rstrip("abcdefg") == wanted:
+                        head_row = row
+                        break
+
+            # Two glosses per word, because they answer different questions. The
+            # phrase joins every morpheme ("steadfast love your") and is what a
+            # reader wants under the line. The stem is the head morpheme alone
+            # ("steadfast love") and is what the word itself was rendered as --
+            # attributing a possessive suffix to the noun would misreport it.
+            for column, stem_version, phrase_version in (
+                ("english", "cherith-en", "interlinear-en"),
+                ("mandarin", "cherith-zh", "interlinear-zh"),
+            ):
+                phrase = " ".join(r[column].strip() for r in rows if r.get(column)).strip()
+                stem = (head_row.get(column) or "").strip()
+                if stem:
+                    gloss_rows.append((token_id, stem_version, stem, "cherith-glosses"))
+                if phrase and phrase != stem:
+                    gloss_rows.append((token_id, phrase_version, phrase, "cherith-glosses"))
 
             greek_text = (head_row.get("greek") or "").strip()
             # MACULA marks "no Greek equivalent here" with punctuation placeholders
@@ -871,6 +903,15 @@ def main():
             print(f"{name}:")
             getattr(ingestor, DATASETS[name])()
             conn.commit()
+
+        # Backfilled once every loader has run, so versions created late (the
+        # Septuagint among them) inherit their tradition too.
+        conn.execute(
+            "UPDATE version SET tradition = "
+            "(SELECT tradition FROM source s WHERE s.id = version.source_id) "
+            "WHERE tradition IS NULL"
+        )
+        conn.commit()
     finally:
         conn.close()
 

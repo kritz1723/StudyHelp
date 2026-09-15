@@ -62,16 +62,4 @@ jobs:
 
       - name: Report provenance
         if: always()
-        run: |
-          python3 - <<'PY'
-          import sqlite3
-          conn = sqlite3.connect("data/studyhelp.db")
-          ok, failed = conn.execute(
-              "SELECT SUM(ok), SUM(1 - ok) FROM fetch_log"
-          ).fetchone()
-          print(f"fetch_log: {ok or 0} ok, {failed or 0} failed")
-          for row in conn.execute(
-              "SELECT source_id, url, http_status, error FROM fetch_log WHERE ok = 0"
-          ):
-              print("  FAILED", row)
-          PY
+        run: python3 scripts/report_provenance.py

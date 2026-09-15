@@ -290,3 +290,52 @@ a { color: var(--accent); }
   border: 1px solid var(--rule); border-radius: 999px; padding: .1rem .5rem;
   color: var(--muted); margin-left: .5rem; vertical-align: middle; }
 .result .badge { margin: 0; }
+
+/* ---- through the centuries ----------------------------------------------- */
+.eras { display: grid; gap: .9rem; }
+.era-row { display: grid; grid-template-columns: 9.5rem 1fr; gap: .3rem 1.2rem;
+  padding: .7rem 0; border-bottom: 1px solid var(--rule); align-items: baseline; }
+.era-when { color: var(--accent); font-size: .82rem; font-variant-numeric: tabular-nums; }
+.era-who { display: block; color: var(--muted); font-size: .72rem; margin-top: .1rem; }
+.era-text { font-family: var(--display); font-size: 1.1rem; line-height: 1.6; margin: 0; }
+.era-row .which { grid-column: 2; margin: .15rem 0 0; }
+
+/* ---- comparison ---------------------------------------------------------- */
+.cmp { display: grid; gap: .1rem; margin-top: 1rem; }
+.cmp-row { display: grid; grid-template-columns: 8rem repeat(var(--cols), 1fr);
+  gap: .8rem; padding: .7rem .2rem; border-bottom: 1px solid var(--rule); align-items: baseline; }
+.cmp-label { color: var(--muted); font-size: .74rem; text-transform: uppercase;
+  letter-spacing: .08em; }
+.cmp-cell { font-size: .95rem; }
+.cmp-word { font-family: var(--display); font-size: 1.5rem; }
+.cmp-cell .c { color: var(--muted); font-size: .75rem; }
+
+/* ---- per-layer reach ----------------------------------------------------- */
+.layers { display: grid; grid-template-columns: minmax(9rem, max-content) 1fr 4rem;
+  gap: .4rem .9rem; align-items: center; }
+.layers .t { font-size: .88rem; }
+.layers .b { height: .5rem; border-radius: 999px; background: var(--bar); min-width: 2px; }
+.layers .p { color: var(--muted); font-size: .78rem; text-align: right;
+  font-variant-numeric: tabular-nums; }
+
+/* ---- scripts other than Latin -------------------------------------------- */
+/* Hebrew runs right to left; without isolation it drags adjacent punctuation
+   and numbers with it. Indic and CJK need more line height than Latin does. */
+[dir="rtl"] { unicode-bidi: isolate; }
+.word, .headword, .cmp-word, .chip .w, .iw .o, .link .body {
+  unicode-bidi: isolate;
+  font-family: var(--display), "Noto Serif Hebrew", "Noto Serif", "Noto Sans Devanagari",
+    "Noto Sans Tamil", "Noto Sans CJK SC", serif;
+}
+:lang(zh), .chip .w:lang(zh) { line-height: 1.9; }
+
+/* ---- attribution --------------------------------------------------------- */
+.src-group { list-style: none; margin-bottom: 1.1rem; }
+.src-kind { display: block; font-size: .72rem; text-transform: uppercase;
+  letter-spacing: .1em; color: var(--accent); margin-bottom: .3rem; }
+.src-group ul { padding-left: 1.1rem; margin: 0; }
+.src-tr { color: var(--muted); font-style: italic; }
+
+/* ---- stated gaps --------------------------------------------------------- */
+.gaps { margin: .4rem 0 0; padding-left: 1.1rem; color: var(--muted); font-size: .9rem; }
+.gaps li { margin-bottom: .3rem; }

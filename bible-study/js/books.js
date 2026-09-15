@@ -71,6 +71,43 @@ const BOOKS = [
 
 const BOOK_BY_NAME = new Map(BOOKS.map((b) => [b.name.toLowerCase(), b]));
 
+// The parser is built over whichever book list it is given, so the site can run
+// it against all 82 books it ships while this module keeps its own 66-book
+// default. One implementation, two callers -- previously there were two
+// implementations, which is how they drift apart.
+function createReferenceParser(books) {
+  const byName = new Map(books.map((b) => [b.name.toLowerCase(), b]));
+
+  function find(input) {
+    const q = String(input || '').trim().toLowerCase().replace(/\s+/g, ' ');
+    if (!q) return null;
+    if (byName.has(q)) return byName.get(q);
+    const exactAbbr = books.find((b) => b.abbr.toLowerCase() === q);
+    if (exactAbbr) return exactAbbr;
+    const prefix = books.filter(
+      (b) => b.name.toLowerCase().startsWith(q) || b.abbr.toLowerCase().startsWith(q)
+    );
+    return prefix.length ? prefix[0] : null;
+  }
+
+  function parse(text) {
+    const raw = String(text || '').trim();
+    const m = raw.match(/^\s*((?:[1-4]\s*)?[A-Za-z][A-Za-z\s]*?)\s*(\d+)?(?::\s*(\d+)(?:\s*-\s*(\d+))?)?\s*$/);
+    if (!m) return null;
+    const book = find(m[1]);
+    if (!book) return null;
+    let chapter = m[2] ? parseInt(m[2], 10) : 1;
+    if (chapter < 1) chapter = 1;
+    if (chapter > book.chapters) chapter = book.chapters;
+    const verseStart = m[3] ? parseInt(m[3], 10) : null;
+    const verseEnd = m[4] ? parseInt(m[4], 10) : verseStart;
+    return { book, chapter, verse: verseStart, verseStart, verseEnd,
+             ref: formatRef(book, chapter, verseStart, verseEnd) };
+  }
+
+  return { findBook: find, parseReference: parse };
+}
+
 // Accepts "John", "john 3", "1 cor", "Jn" and similar loose input.
 function findBook(input) {
   const q = String(input || '').trim().toLowerCase();

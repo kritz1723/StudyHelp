@@ -11,7 +11,7 @@ const els = {
   welcome: el('welcome'), featured: el('featured'), sources: el('sources'), stats: el('stats'),
 };
 
-let INDEX = [], SOURCES = {}, VERSIONS = [], CANONS = {}, BOOKS = [];
+let INDEX = [], SOURCES = {}, VERSIONS = [], CANONS = {}, CANON_BOOKS = [];
 let lastMatches = [];
 
 const LANG = { hbo: 'Hebrew', arc: 'Aramaic', grc: 'Greek', en: 'English', la: 'Latin', zh: 'Mandarin' };
@@ -70,28 +70,13 @@ const TRADITION = { traditional: 'Traditional dating', critical: 'Critical datin
 
 // -- references ------------------------------------------------------------
 
-// Reference parsing is driven by the book list the site ships, so it covers
-// every canon rather than a hardcoded sixty-six.
-function parseReference(text) {
-  const raw = String(text || '').trim();
-  const m = raw.match(/^\s*((?:[1-4]\s*)?[A-Za-z][A-Za-z\s]*?)\s*(\d+)?(?::\s*(\d+))?\s*$/);
-  if (!m) return null;
-  const book = findBook(m[1]);
-  if (!book) return null;
-  let chapter = m[2] ? parseInt(m[2], 10) : 1;
-  if (chapter < 1) chapter = 1;
-  if (chapter > book.chapters) chapter = book.chapters;
-  return { book, chapter, verse: m[3] ? parseInt(m[3], 10) : null };
-}
-
-function findBook(input) {
-  const q = fold(String(input || '').trim()).replace(/\s+/g, ' ');
-  if (!q) return null;
-  const exact = BOOKS.find((b) => fold(b.name) === q || fold(b.abbr) === q);
-  if (exact) return exact;
-  const starts = BOOKS.filter((b) => fold(b.name).startsWith(q) || fold(b.abbr).startsWith(q));
-  return starts.length ? starts[0] : null;
-}
+// Reference parsing comes from books.js, built over the full book list the site
+// ships, so a reference resolves against every canon rather than a hardcoded 66.
+// Named to avoid colliding with books.js's own top-level parseReference: both
+// load as classic scripts into one global scope, where a duplicate declaration
+// is a SyntaxError that stops the entire page.
+let REFERENCES = null;
+const resolveReference = (text) => (REFERENCES ? REFERENCES.parseReference(text) : null);
 
 // -- boot ------------------------------------------------------------------
 
@@ -104,7 +89,8 @@ async function boot() {
       fetch('books.json').then((r) => r.json()).catch(() => ({ books: [] })),
     ]);
     INDEX = index.lemmas; SOURCES = index.sources; VERSIONS = index.versions || [];
-    CANONS = canons; BOOKS = books.books || [];
+    CANONS = canons; CANON_BOOKS = books.books || [];
+    REFERENCES = createReferenceParser(CANON_BOOKS);
     INDEX.forEach((e) => { e._key = fold(e.xlit) + ' ' + fold(e.lemma) + ' ' + fold(e.terms || e.gloss); });
 
     els.version.innerHTML = VERSIONS
@@ -224,7 +210,7 @@ async function showChapter(bookName, chapter, focusVerse) {
     return;
   }
 
-  const book = BOOKS.find((b) => b.name === bookName);
+  const book = CANON_BOOKS.find((b) => b.name === bookName);
   const version = els.version.value;
   const versionName = (VERSIONS.find((v) => v.id === version) || {}).name || version;
 
@@ -244,6 +230,31 @@ async function showChapter(bookName, chapter, focusVerse) {
         </div>`;
     }).join('');
 
+  // One verse read by every tradition, oldest first. This is the perspectives
+  // view: not what commentators said, but what each reading community actually
+  // did with the words -- which is evidence rather than opinion.
+  const centuries = focusVerse ? (() => {
+    const verse = data.verses.find((v) => v.v === focusVerse);
+    if (!verse) return '';
+    const rows = VERSIONS
+      .filter((v) => verse.t[v.id] && v.language !== 'zh')
+      .sort((a, b) => (a.year ?? 9999) - (b.year ?? 9999))
+      .map((v) => `
+        <div class="era-row">
+          <div class="era-when">${v.year != null ? esc(year(v.year)) : ''}
+            <span class="era-who">${esc(v.tradition || v.name)}</span></div>
+          <p class="era-text" ${v.language === 'he' || v.language === 'hbo' ? 'dir="rtl"' : ''}>${esc(verse.t[v.id])}</p>
+          <p class="which">${esc(v.name)}${v.from ? `, from the ${esc(v.from)}` : ''}${
+            v.caution ? ` — ${esc(v.caution)}` : ''}</p>
+        </div>`).join('');
+    return rows ? `
+      <h3>Through the centuries</h3>
+      <div class="eras">${rows}</div>
+      <p class="note">The same verse as each tradition rendered it, oldest first. Where they
+         differ, the difference is a decision someone made — visible here rather than
+         argued about. No commentary is involved: this is what the translators did.</p>` : '';
+  })() : '';
+
   show('reader');
   els.reader.innerHTML = `
     <h2>${esc(bookName)} ${chapter}${focusVerse ? `:${focusVerse}` : ''}</h2>
@@ -251,6 +262,7 @@ async function showChapter(bookName, chapter, focusVerse) {
        behind it — click one to trace it. ${focusVerse
          ? `<button class="more" id="whole-chapter">Show the whole chapter</button>` : ''}</p>
     ${verses || '<p class="hint">This chapter has no text loaded.</p>'}
+    ${centuries}
     <div class="chapter-nav">
       ${chapter > 1 ? `<button data-goto="${esc(bookName)}|${chapter - 1}">← ${esc(bookName)} ${chapter - 1}</button>` : ''}
       ${book && chapter < book.chapters ? `<button data-goto="${esc(bookName)}|${chapter + 1}">${esc(bookName)} ${chapter + 1} →</button>` : ''}
@@ -356,6 +368,41 @@ async function showLemma(slug) {
          Canonical order and composition order give different answers, and both are shown
          rather than one being chosen for you.</p>` : '';
 
+  // Per-layer counts: the shape of these numbers is itself the finding.
+  const lxxCount = (data.to_greek || []).reduce((n, [, c]) => n + c, 0);
+  const englishCount = ((data.renderings || {})['cherith-en'] || []).reduce((n, [, c]) => n + c, 0);
+  const layerData = [
+    [data.lang === 'grc' ? 'Greek New Testament' : 'Hebrew Bible', data.count],
+    ['Followed into the Septuagint', lxxCount],
+    ['Glossed in English', englishCount],
+  ].filter(([, n]) => n > 0);
+  const layerPeak = Math.max(...layerData.map(([, n]) => n), 1);
+  const layers = layerData.length > 1 ? layerData.map(([label, n]) => `
+    <span class="t">${esc(label)}</span>
+    <span class="b" style="width:${Math.max(2, (n / layerPeak) * 100)}%"></span>
+    <span class="p">${n.toLocaleString()}</span>`).join('') : '';
+
+  // Suggested comparisons are words English renders with the same word, so the
+  // comparison shows what the single English word is hiding.
+  const compareWith = (data.compare_with || []).filter((e) => e.slug);
+
+  // Silence reads as "nothing to say". Naming the gap is more honest than
+  // omitting a section and letting the reader assume completeness.
+  const gaps = [];
+  if (!data.first) gaps.push('No tagged occurrence in the text, so it has no first appearance here.');
+  if (data.lang !== 'grc' && !(data.to_greek || []).length && data.count) {
+    gaps.push('No Septuagint equivalent is recorded, so the chain into Greek cannot be followed for this word.');
+  }
+  if (!Object.keys(data.renderings || {}).length && data.count) {
+    gaps.push('No word-by-word gloss covers it, so what translators made of it is not shown.');
+  }
+  if (Object.keys(data.senses || {}).length < 2) {
+    gaps.push('Only one dictionary covers it, so no disagreement between authorities can be shown.');
+  }
+  if (!(data.earliest_written || {}).traditional) {
+    gaps.push('The book it first appears in has no composition date here, so it cannot be placed in time.');
+  }
+
   const first = data.first;
   show('detail');
   els.detail.innerHTML = `
@@ -366,6 +413,9 @@ async function showLemma(slug) {
       ${data.hapax ? '<span class="badge">appears once</span>' : ''}</p>
 
     ${chain}
+
+    ${layers ? `<h3>How far it reaches</h3><div class="layers">${layers}</div>
+      <p class="note">The same word counted at each stage it passes through.</p>` : ''}
 
     <h3>Where it first appears</h3>
     ${first ? `
@@ -401,14 +451,68 @@ async function showLemma(slug) {
          for it. A word that collapses to a single choice in one language and spreads across
          many in another is telling you about the translation, not the word.</p>` : ''}
 
+    ${gaps.length ? `<h3>What is not known here</h3>
+      <ul class="gaps">${gaps.map((g) => `<li>${esc(g)}</li>`).join('')}</ul>
+      <p class="note">Stated plainly because an absence of evidence is easy to mistake for
+         evidence of absence. These are gaps in what this site holds, not claims about the
+         word.</p>` : ''}
+
     <h3>What it has meant</h3>
-    ${senses}`;
+    ${senses}
+
+    ${compareWith.length ? `<h3>Set it against another word</h3>
+      <div class="chips">${compareWith.map((e) => `
+        <button class="chip" data-compare="${esc(data.slug)}|${esc(e.slug)}">
+          <span class="w">${esc(e.lemma)}</span>
+          <span class="c">${esc(e.xlit || '')} ${e.n}</span></button>`).join('')}</div>
+      <p class="note">English renders each of these with the same word it uses for this one.
+         Setting them side by side shows what that single English word is holding together.</p>` : ''}`;
 
   el('back').addEventListener('click', goBack);
   const showRest = el('show-rest');
   if (showRest) showRest.addEventListener('click', () => {
     el('rest').hidden = false; showRest.remove();
   });
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// Comparison is how a word study is actually done: agape against phileo,
+// chesed against rachamim. One word alone has nothing to be distinct from.
+async function showCompare(slugs) {
+  const loaded = await Promise.all(slugs.map((slug) =>
+    fetch(`lemma/${encodeURIComponent(slug)}.json`).then((r) => r.json()).catch(() => null)));
+  const words = loaded.filter(Boolean);
+  if (words.length < 2) { location.hash = slugs[0] || ''; return; }
+
+  const row = (label, cell) => `
+    <div class="cmp-row"><span class="cmp-label">${esc(label)}</span>
+      ${words.map((w) => `<div class="cmp-cell">${cell(w)}</div>`).join('')}</div>`;
+
+  show('detail');
+  els.detail.innerHTML = `
+    <button class="back" id="back">← back</button>
+    <h2 class="headword">${words.map((w) => esc(w.lemma)).join(' · ')}</h2>
+    <p class="meta">Two words side by side. What separates them is easier to see than
+       what either one means alone.</p>
+    <div class="cmp" style="--cols:${words.length}">
+      ${row('Word', (w) => `<span class="cmp-word">${esc(w.lemma)}</span>
+         <span class="xlit">${esc(w.xlit || '')}</span>`)}
+      ${row('Occurrences', (w) => `${w.count.toLocaleString()}`)}
+      ${row('First appears', (w) => w.first ? esc(w.first.ref) : '—')}
+      ${row('Gathers in', (w) => (w.by_genre || []).slice(0, 2)
+         .map(([g]) => esc(GENRE[g] || g)).join(', ') || '—')}
+      ${row('Usually becomes', (w) => {
+        const entries = (w.renderings || {})['cherith-en'] || [];
+        return entries.slice(0, 3).map(([t, c]) => `${esc(t)} <span class="c">${c}</span>`).join(', ') || '—';
+      })}
+      ${row('Said to mean', (w) => {
+        const groups = Object.values(w.senses || {});
+        return groups.length ? esc((groups[0][0] || {}).gloss || '—') : '—';
+      })}
+    </div>
+    <p class="note">Drawn from the same sources as each word's own page; nothing here is a
+       judgement about which word is stronger or truer.</p>`;
+  el('back').addEventListener('click', goBack);
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
@@ -420,11 +524,32 @@ function goBack() {
 
 function said(id) { const s = SOURCES[id]; return s ? s.name : 'an unrecorded source'; }
 
+// Attribution is generated from the registry, never hand-maintained: every
+// CC-BY and CC-BY-SA source here requires visible credit, and a hand-kept list
+// goes stale the first time a source is added.
+const WITNESS = {
+  primary: 'primary witness',
+  translation: 'translation',
+  derivative: 'repackaged by an aggregator',
+  reference: 'reference data',
+};
+
 function renderSources() {
-  els.sources.innerHTML = Object.values(SOURCES).filter((s) => s.name)
-    .sort((a, b) => a.name.localeCompare(b.name))
-    .map((s) => `<li>${s.url ? `<a href="${esc(s.url)}">${esc(s.name)}</a>` : esc(s.name)}
-       — ${esc(s.license)}${s.attribution ? ` · ${esc(s.attribution)}` : ''}</li>`).join('');
+  const groups = { primary: [], translation: [], derivative: [], reference: [] };
+  for (const s of Object.values(SOURCES)) {
+    if (s.name) (groups[s.witness] || groups.reference).push(s);
+  }
+  els.sources.innerHTML = Object.entries(groups)
+    .filter(([, list]) => list.length)
+    .map(([witness, list]) => `
+      <li class="src-group"><span class="src-kind">${esc(WITNESS[witness] || witness)}</span>
+        <ul>${list.sort((a, b) => a.name.localeCompare(b.name)).map((s) => `
+          <li>${s.url ? `<a href="${esc(s.url)}">${esc(s.name)}</a>` : esc(s.name)}
+            — ${esc(s.license)}${s.attribution ? ` · ${esc(s.attribution)}` : ''}
+            ${s.tradition ? `<span class="src-tr">${esc(s.tradition)}</span>` : ''}
+            ${s.verified === 'unverified'
+              ? '<span class="badge">licence unconfirmed</span>' : ''}</li>`).join('')}</ul></li>`)
+    .join('');
 }
 
 // -- routing ---------------------------------------------------------------
@@ -432,6 +557,7 @@ function renderSources() {
 function routeFromHash() {
   const raw = decodeURIComponent(location.hash.replace(/^#/, ''));
   if (!raw) { show('welcome'); return; }
+  if (raw.includes('|')) { showCompare(raw.split('|').filter(Boolean)); return; }
   const parts = raw.split('.');
   // A reference route looks like Book.chapter[.verse]; anything else is a word.
   if (parts.length >= 2 && /^\d+$/.test(parts[1])) {
@@ -450,7 +576,7 @@ els.q.addEventListener('input', () => {
     const value = els.q.value.trim();
     if (!value) { show('welcome'); return; }
     // A reference wins over a word search: someone typing "John 3:16" wants to read.
-    const ref = parseReference(value);
+    const ref = resolveReference(value);
     if (ref && /\d/.test(value)) {
       location.hash = `${ref.book.name.replace(/ /g, '_')}.${ref.chapter}${ref.verse ? `.${ref.verse}` : ''}`;
       return;
@@ -468,6 +594,8 @@ document.addEventListener('click', (event) => {
     location.hash = `${book.replace(/ /g, '_')}.${chapter}.${verse}`;
     return;
   }
+  const compare = event.target.closest('[data-compare]');
+  if (compare) { location.hash = compare.dataset.compare; return; }
   const goto = event.target.closest('[data-goto]');
   if (goto) {
     const [book, chapter] = goto.dataset.goto.split('|');

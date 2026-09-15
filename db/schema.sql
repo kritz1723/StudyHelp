@@ -28,6 +28,12 @@ CREATE TABLE IF NOT EXISTS source (
     tier          TEXT,            -- 1 = usable now, 2 = open with conditions, 3 = licensed/commercial
     priority      TEXT,
     verified      TEXT,            -- ISO date the licence was confirmed, or 'unverified'
+    -- A primary witness (a tagged original-language text, a manuscript edition)
+    -- carries more weight than a derivative one (an aggregator's repackaging).
+    witness       TEXT,            -- primary | translation | derivative | reference
+    -- Which reading community a version speaks for. Two translations differing
+    -- is only a perspective if you know whose perspective each one is.
+    tradition     TEXT,
     notes         TEXT
 );
 
@@ -113,6 +119,7 @@ CREATE TABLE IF NOT EXISTS version (
     -- rather than the Greek is a fact the drift view must not hide.
     translated_from TEXT,
     textual_family  TEXT,           -- e.g. textus_receptus | alexandrian | byzantine | masoretic
+    tradition       TEXT,           -- the reading community this version speaks for
     license         TEXT
 );
 

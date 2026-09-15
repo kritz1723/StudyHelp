@@ -1,12 +1,32 @@
 # Backlog
 
+## What cannot be closed from here
+
+Four items are not engineering problems and will not be closed by writing code.
+They are recorded here so the trade-off stays visible rather than drifting out of view.
+
+- **Semantic domains (Louw-Nida via UBS MARBLE, and the Semantic Dictionary of Biblical
+  Hebrew).** Both are marked "used with permission" inside MACULA rather than openly
+  licensed. Clear Bible holds that permission; we do not inherit it. Only the United
+  Bible Societies can change this, and only if asked.
+- **Licensed modern translations (NIV, ESV, NASB, CSB).** Need paid or permissioned
+  access. The Berean Standard Bible covers the modern slot meanwhile. Never scrape them.
+- **KJV UK Crown copyright.** Public domain almost everywhere; Crown letters patent still
+  apply within the UK. Geo-restrict or accept the risk — an owner's decision, not a
+  technical one.
+- **A Strong's-tagged historical English translation.** Four sources checked and none
+  carries one: the scrollmapper KJV in both its JSON and SQLite exports, the open-bibles
+  OSIS edition, and STEPBible (which tags only the ESV, whose text is copyrighted).
+  Without one, drift can be shown across languages and across whole verses, but not word
+  by word across centuries.
+
 Deferred work and best practices. The decision for now is **open source only** —
 anything requiring a commercial licence, paid access or manual scholarly effort is
 recorded here rather than dropped, so the trade-off stays visible.
 
 ## Licensing and sources
 
-- [ ] **Verify the `unverified` entries in `data/sources/sources.json`.** Several
+- [x] **Verify the `unverified` entries in `data/sources/sources.json`.** Several
       registry rows carry licence claims taken from publisher descriptions rather than
       confirmed against the licence text. Each needs a check and a `verified` date.
 - [ ] **Resolve the SBLGNT EULA question.** The MorphGNT *tagging* is CC-BY-SA, but the
@@ -18,9 +38,9 @@ recorded here rather than dropped, so the trade-off stays visible.
       include them for the modern end of the drift timeline. Deferred: they need paid or
       permissioned API access. The Berean Standard Bible (public domain, 2023) covers the
       modern slot in the meantime. **Never scrape them.**
-- [ ] **Automated licence-compliance check.** A test that fails if any displayed claim
+- [x] **Automated licence-compliance check.** A test that fails if any displayed claim
       resolves to a source whose `license` is unset or whose `verified` is `unverified`.
-- [ ] **Attribution surface.** Every licence here (CC-BY, CC-BY-SA) requires visible
+- [x] **Attribution surface.** Every licence here (CC-BY, CC-BY-SA) requires visible
       credit. Build a single attributions page generated from the registry, not
       hand-maintained.
 - [ ] **CC-BY-SA share-alike propagation.** Some sources (MorphGNT tagging, unfoldingWord,
@@ -36,10 +56,10 @@ recorded here rather than dropped, so the trade-off stays visible.
       (Psalm superscriptions especially). The `verse.versification` column exists; the
       mapping tables do not yet. This will silently corrupt cross-version comparison if
       left undone.
-- [ ] **Composition dates with attribution.** The chronology view needs per-book date
+- [x] **Composition dates with attribution.** The chronology view needs per-book date
       ranges, and these are genuinely contested. Store as ranges with a `source_id`
       (schema supports it), and show the range rather than a point estimate.
-- [ ] **Aggregator drift.** Convenience aggregators can silently alter text. Record the
+- [x] **Aggregator drift.** Convenience aggregators can silently alter text. Record the
       upstream edition and checksum; never cite the aggregator as the authority.
 - [ ] **Text normalisation for historical English.** Tyndale/Geneva/Wycliffe spelling
       varies wildly. Needs a normalisation layer for search that preserves the original
@@ -47,7 +67,7 @@ recorded here rather than dropped, so the trade-off stays visible.
 
 ## Engineering
 
-- [ ] **No inline scripting in workflows.** The deploy broke because a reporting step
+- [x] **No inline scripting in workflows.** The deploy broke because a reporting step
       was inline YAML that no test could reach. It is a tested script now; the same
       should be true of anything else that runs only in CI.
 
@@ -85,9 +105,9 @@ recorded here rather than dropped, so the trade-off stays visible.
       analyser (James Tauber's greek-inflexion is the obvious candidate, and the Swete
       repo already anticipates this); seek permission for CCAT use; or accept
       surface-form-only bridging and label it as such. **Needs a decision.**
-- [ ] **Per-layer occurrence counts.** Show a word's count in Hebrew, LXX, Greek NT and
+- [x] **Per-layer occurrence counts.** Show a word's count in Hebrew, LXX, Greek NT and
       each English version side by side, as sketched on the board.
-- [ ] **Mark primary vs derivative sources** in the registry. A tagged original-language
+- [x] **Mark primary vs derivative sources** in the registry. A tagged original-language
       text and an aggregated translation should not carry equal weight.
 - [x] **The `gloss` table is populated.** 386,092 per-word glosses from MACULA, in
       English (Berean Interlinear and Cherith) and Mandarin (Cherith). A word's page now
@@ -112,11 +132,11 @@ recorded here rather than dropped, so the trade-off stays visible.
 - [ ] **unfoldingWord is unreachable from this environment.** git.door43.org is blocked
       by the network policy and the repositories are not mirrored on GitHub, so the
       aligned ULT/UST could not be evaluated.
-- [ ] **BDB senses.** BrownDriverBriggs.xml is fetched but not parsed; currently the
+- [x] **BDB senses.** BrownDriverBriggs.xml is fetched but not parsed; currently the
       only Hebrew senses are Strong's, which is thin and dated for real study.
 - [x] **Enumerate multi-file sources.** `downloads.json` now lists all 71 files
       (39 OSHB books, 27 MorphGNT books, 5 lexicon files).
-- [ ] **Re-fetch and diff.** `fetch_log` records sha256 per retrieval; add a command that
+- [x] **Re-fetch and diff.** `fetch_log` records sha256 per retrieval; add a command that
       re-fetches and reports what changed upstream.
 - [x] **Tests.** 23 Python tests and 17 reference-parser tests, run by CI on every push
       and pull request.
@@ -127,7 +147,7 @@ recorded here rather than dropped, so the trade-off stays visible.
 
 - [x] **Static site + Pages deploy via Actions.** Search, disambiguation and lemma detail,
       published on every push to `main`.
-- [ ] **Repo setting: Pages source = GitHub Actions.** Must be set once by hand; the
+- [x] **Repo setting: Pages source = GitHub Actions.** Must be set once by hand; the
       deploy job cannot do it for itself.
 - [ ] **Index size.** `index.json` is 2.1 MB and every visitor downloads it. Fine now;
       shard or move to a prefix-indexed search once English translations land.
@@ -172,21 +192,21 @@ recorded here rather than dropped, so the trade-off stays visible.
       and SQLite exports carry plain text only. Tracing a word across centuries needs a
       genuinely aligned historical version; without one, drift can be shown across
       languages but not across time.
-- [ ] **Two reference parsers now exist.** `bible-study/js/books.js` is the standalone,
+- [x] **Two reference parsers now exist.** `bible-study/js/books.js` is the standalone,
       tested one; the site parses references from `books.json` so it covers all 82 books.
       They should converge on one implementation.
-- [ ] **Compare two words side by side.** Still worth building: the classic word study is
+- [x] **Compare two words side by side.** Still worth building: the classic word study is
       comparative (agape against phileo, chesed against rachamim).
 
-- [ ] **English word → lemma disambiguation UI.** Searching "love" must resolve to several
+- [x] **English word → lemma disambiguation UI.** Searching "love" must resolve to several
       Greek lemmas. The disambiguation step is the app's first real screen and its
       hardest design problem — get it wrong and the whole premise collapses back into
       English-word study.
-- [ ] **Composition order vs canonical order.** "First appearance" has two defensible
+- [x] **Composition order vs canonical order.** "First appearance" has two defensible
       answers. Show both, labelled.
-- [ ] **Perspectives sourcing.** Open-licensed commentary is thin. Public-domain options
+- [x] **Perspectives sourcing.** Open-licensed commentary is thin. Public-domain options
       (Matthew Henry, Calvin, Gill, Barnes) skew heavily Protestant and pre-1900 —
       using only these would itself introduce the bias the app exists to avoid.
       Needs a deliberate plan, and honest labelling of the gaps.
-- [ ] **Explicit "we don't know" state.** Where sources genuinely conflict or evidence is
+- [x] **Explicit "we don't know" state.** Where sources genuinely conflict or evidence is
       thin, say so rather than presenting a confident synthesis.

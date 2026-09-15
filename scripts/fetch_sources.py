@@ -52,7 +52,18 @@ def fetch_one(conn, source_id, url, rel_path, force=False):
     now = datetime.now(timezone.utc).isoformat()
 
     if dest.exists() and not force:
-        print(f"  skip (exists): {rel_path}")
+        # A skipped file still needs a provenance row. Without this, rebuilding
+        # the database against an already-populated data/raw leaves fetch_log
+        # empty, and the claim that every byte is traceable becomes untrue for
+        # exactly the case that happens most often.
+        payload = dest.read_bytes()
+        log_fetch(
+            conn, source_id=source_id, url=url, fetched_at=now, bytes=len(payload),
+            sha256=hashlib.sha256(payload).hexdigest(),
+            local_path=str(dest.relative_to(ROOT)), ok=1,
+            error="recorded from the copy already on disk, not re-downloaded",
+        )
+        print(f"  have: {rel_path}")
         return True
 
     try:
