@@ -39,10 +39,11 @@ def build(conn, out_dir):
     sources = {
         row[0]: {"id": row[0], "name": row[1], "license": row[2],
                  "attribution": row[3], "url": row[4] or row[5],
-                 "witness": row[6], "tradition": row[7], "verified": row[8]}
+                 "witness": row[6], "tradition": row[7], "verified": row[8],
+                 "caveat": row[9]}
         for row in conn.execute(
             "SELECT id, name, license, attribution, repository, homepage, "
-            "witness, tradition, verified FROM source"
+            "witness, tradition, verified, caveat FROM source"
         )
     }
 

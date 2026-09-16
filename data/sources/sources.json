@@ -212,9 +212,10 @@
       "tier": 1,
       "priority": "critical",
       "verified": "2026-09-15",
-      "notes": "UK Crown copyright (letters patent) is a real if rarely enforced constraint — record it rather than assuming worldwide public domain. Published 1769; public domain by age outside the UK. UK Crown letters patent still apply within the UK — recorded, not resolved.",
+      "notes": "UK Crown copyright (letters patent) is a real if rarely enforced constraint — record it rather than assuming worldwide public domain. Published 1769; public domain by age outside the UK. UK Crown letters patent still apply within the UK — recorded, not resolved. Crown copyright within the UK is disclosed on the site rather than geo-restricted; the notice travels with the version wherever it is credited.",
       "tradition": "Anglican, Textus Receptus",
-      "witness": "translation"
+      "witness": "translation",
+      "caveat": "Crown copyright applies within the United Kingdom."
     },
     {
       "id": "asv-1901",
