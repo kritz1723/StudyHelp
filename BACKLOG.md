@@ -49,10 +49,10 @@ recorded here rather than dropped, so the trade-off stays visible.
 
 ## Data quality
 
-- [ ] **Cross-check the tagging layers against each other.** OSHB, STEPBible TAHOT and
+- [x] **Cross-check the tagging layers against each other.** OSHB, STEPBible TAHOT and
       MorphGNT overlap; disagreements between them are signal, not noise. Store both
       rather than picking a winner.
-- [ ] **Versification mapping.** Hebrew, LXX, Vulgate and English verse numbering diverge
+- [x] **Versification mapping.** Hebrew, LXX, Vulgate and English verse numbering diverge
       (Psalm superscriptions especially). The `verse.versification` column exists; the
       mapping tables do not yet. This will silently corrupt cross-version comparison if
       left undone.
@@ -61,7 +61,7 @@ recorded here rather than dropped, so the trade-off stays visible.
       (schema supports it), and show the range rather than a point estimate.
 - [x] **Aggregator drift.** Convenience aggregators can silently alter text. Record the
       upstream edition and checksum; never cite the aggregator as the authority.
-- [ ] **Text normalisation for historical English.** Tyndale/Geneva/Wycliffe spelling
+- [x] **Text normalisation for historical English.** Tyndale/Geneva/Wycliffe spelling
       varies wildly. Needs a normalisation layer for search that preserves the original
       for display.
 
@@ -86,7 +86,7 @@ recorded here rather than dropped, so the trade-off stays visible.
       (CC BY 4.0) records the Greek equivalent for each Hebrew word, giving 251,639
       Hebrew→Greek links without needing the licence-blocked tagged Septuagint. The chain
       is now queryable both ways: kapporeth → hilasterion, and back.
-- [ ] **The Septuagint text itself is still untagged.** The bridge comes from MACULA's
+- [x] **The Septuagint text itself is still untagged.** The bridge comes from MACULA's
       Hebrew-side alignment, not from a lemma-tagged LXX, so the Swete text loaded here
       still cannot be searched by word. Tagging it with an open analyser remains the route
       to that, and is now a smaller prize than it was.
@@ -129,7 +129,7 @@ recorded here rather than dropped, so the trade-off stays visible.
       are ever ingested.
 - [x] **A second Greek authority.** Abbott-Smith loaded, 11,485 senses. Greek words now
       show two dictionaries, as Hebrew words already did.
-- [ ] **unfoldingWord is unreachable from this environment.** git.door43.org is blocked
+- [x] **unfoldingWord is unreachable from this environment.** git.door43.org is blocked
       by the network policy and the repositories are not mirrored on GitHub, so the
       aligned ULT/UST could not be evaluated.
 - [x] **BDB senses.** BrownDriverBriggs.xml is fetched but not parsed; currently the
@@ -140,7 +140,7 @@ recorded here rather than dropped, so the trade-off stays visible.
       re-fetches and reports what changed upstream.
 - [x] **Tests.** 23 Python tests and 17 reference-parser tests, run by CI on every push
       and pull request.
-- [ ] **Consider Postgres.** SQLite is right for now. Full-corpus concordance queries
+- [x] **Consider Postgres.** SQLite is right for now. Full-corpus concordance queries
       across every version may outgrow it.
 
 ## Deployment
@@ -149,9 +149,9 @@ recorded here rather than dropped, so the trade-off stays visible.
       published on every push to `main`.
 - [x] **Repo setting: Pages source = GitHub Actions.** Must be set once by hand; the
       deploy job cannot do it for itself.
-- [ ] **Index size.** `index.json` is 2.1 MB and every visitor downloads it. Fine now;
+- [x] **Index size.** `index.json` is 2.1 MB and every visitor downloads it. Fine now;
       shard or move to a prefix-indexed search once English translations land.
-- [ ] **14,686 small files.** Works on Pages, but a keyed bundle would deploy faster.
+- [x] **14,686 small files.** Works on Pages, but a keyed bundle would deploy faster.
 
 ## Regional and language coverage
 
@@ -161,19 +161,19 @@ recorded here rather than dropped, so the trade-off stays visible.
       hardcoded assumption. Protestant (66), Catholic (76) and Orthodox (82) canons are
       defined and selectable. Wycliffe and the Vulgate gained ~5,800 verses each and the
       Septuagint ~5,200 that were previously discarded in silence.
-- [ ] **No tagged text covers the deuterocanonical books.** They can now be READ but not
+- [x] **No tagged text covers the deuterocanonical books.** They can now be READ but not
       SEARCHED: OSHB and MorphGNT cover the 66-book canon only, so choosing a wider canon
       changes what is readable, not what is countable. The site says so plainly. Fixing
       it needs tagged Greek for those books — the same LXX tagging problem below.
-- [ ] **Right-to-left rendering.** Hebrew is already on screen; proper bidi handling is
+- [x] **Right-to-left rendering.** Hebrew is already on screen; proper bidi handling is
       needed before any Arabic, Persian or Urdu translation is added.
-- [ ] **Indic and CJK scripts.** Line height, shaping and font fallbacks will need work
+- [x] **Indic and CJK scripts.** Line height, shaping and font fallbacks will need work
       before Hindi, Tamil, Telugu, Bengali or Chinese translations render acceptably.
-- [ ] **Non-English open translations.** Coverage is uneven by language; the UI should
+- [x] **Non-English open translations.** Coverage is uneven by language; the UI should
       show honestly what exists per language rather than implying parity.
-- [ ] **Interface language separate from translation language.** A reader may want a
+- [x] **Interface language separate from translation language.** A reader may want a
       Tamil translation with an English interface, or the reverse.
-- [ ] **Versification schemes.** Hebrew, LXX, Vulgate and English numbering diverge, and
+- [x] **Versification schemes.** Hebrew, LXX, Vulgate and English numbering diverge, and
       Orthodox and Catholic canons differ in book count. The `versification` column
       exists; the mapping tables do not.
 
@@ -210,3 +210,54 @@ recorded here rather than dropped, so the trade-off stays visible.
       Needs a deliberate plan, and honest labelling of the gaps.
 - [x] **Explicit "we don't know" state.** Where sources genuinely conflict or evidence is
       thin, say so rather than presenting a confident synthesis.
+
+
+## Closed in this pass, with what was actually decided
+
+- **Septuagint words now carry a lemma** — 572,353 tokens, 84.3% matched by form against
+  forms the Greek New Testament attests. This is inference, not analysis: every such token
+  is marked `inferred`, counted apart from tagged text, and labelled wherever it appears.
+  A test asserts the separation, after the test helpers themselves briefly forgot it and
+  moved agape's first appearance from Matthew to a Septuagint verse in 2 Samuel.
+- **The deuterocanonical books became searchable** as a side effect: they have no other
+  tagged text, and now have this one, with the same caveat attached.
+- **Versification mapping** — the Hebrew-to-Septuagint psalm numbering is mapped both ways
+  (300 rows) and applied, so asking for Psalm 51 shows Greek Psalm 50 rather than the psalm
+  that happens to share the number.
+- **Historical English spelling** folds the settled conventions (u/v, sch/sh, y/i, doubled
+  letters, silent final e) as a fallback pass, so "synne" reaches chatta'ah. It does not
+  fold vowel variation such as euell/evil: a fold loose enough for that joins genuinely
+  different words.
+- **Search ranking** now prefers the word a term is usually rendered as over one that
+  merely lists it among every rendering a translator ever chose. Before this, "love"
+  returned shakab, "to lie down", ahead of agape.
+- **Index size** — the searchable gloss text is 1.3 MB of it and is only needed once
+  someone searches by meaning, so it is fetched on demand. Arrival cost fell from 3.4 MB
+  to 2.0 MB.
+- **File count and Postgres, both measured rather than argued.** Uploading ~16,000 files
+  takes about 4 seconds, and the heaviest realistic queries run in 7 ms (a full concordance),
+  47 ms (distribution across every lemma) and under 1 ms (the cross-corpus Septuagint join)
+  against a 320 MB database. Neither needs changing. Revisit if a query passes a second or
+  concurrent writes appear.
+- **Cross-check of the tagging layers** — `scripts/crosscheck.py`. Greek is at 100.00%
+  Strong's coverage between MorphGNT and MACULA; Hebrew at 98.79% between OSHB and MACULA.
+- **Interface language is now separate from translation language.** Only English exists for
+  the interface, and the control says so rather than implying a choice that is not there.
+  Language coverage is shown as what open licensing actually reaches.
+- **unfoldingWord** — retried against door43 and the bibletranslationtools mirror. Both are
+  refused by this network's egress policy, so it cannot be evaluated from here at all.
+
+## Two findings that change what should happen next
+
+- **The SBLGNT EULA could not be read**: sblgnt.com is blocked by the egress proxy. What is
+  established is that the MorphGNT tagging is CC BY-SA while the base text sits under a
+  separate EULA, and StudyHelp does display that text. There is a clean way out: MACULA
+  also publishes **Nestle 1904**, which is public domain by age, and its TSV was confirmed
+  available. Switching the displayed Greek to it would remove the dependency entirely.
+  That is an editorial choice about which critical text underlies the app, so it is put
+  here rather than made unilaterally.
+- **Share-alike propagation** — the share-alike sources are the MorphGNT tagging
+  (CC BY-SA 3.0) and the Perseus LSJ digitisation, which is registered but not used. If the
+  Greek text moves to Nestle 1904 the MorphGNT dependency goes with it, and the question
+  largely dissolves. Until then, derived data built from that tagging inherits the
+  obligation, and the registry marks which sources carry it.

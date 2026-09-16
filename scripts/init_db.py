@@ -111,6 +111,49 @@ def upsert_composition_dates(conn):
     return len(rows)
 
 
+def upsert_versification(conn):
+    """Load the Hebrew-to-Septuagint psalm numbering map.
+
+    The Septuagint joins Hebrew Psalms 9 and 10 into one and splits Hebrew 147,
+    so between them the two schemes run one apart. Comparing "Psalm 51" across
+    versions without this silently compares different psalms.
+    """
+    psalms = conn.execute("SELECT id FROM book WHERE name = 'Psalms'").fetchone()
+    if not psalms:
+        return 0
+    book_id = psalms[0]
+
+    rows = []
+    for hebrew in range(1, 151):
+        if hebrew <= 8:
+            greek, note = hebrew, None
+        elif hebrew <= 9:
+            greek, note = 9, "Hebrew 9 and 10 are one psalm in the Septuagint"
+        elif hebrew <= 113:
+            greek, note = hebrew - 1, "one behind, after 9 and 10 were joined"
+        elif hebrew <= 115:
+            greek, note = 113, "Hebrew 114 and 115 are one psalm in the Septuagint"
+        elif hebrew <= 116:
+            greek, note = 114, "Hebrew 116 is split into Greek 114 and 115"
+        elif hebrew <= 146:
+            greek, note = hebrew - 1, "one behind"
+        elif hebrew == 147:
+            greek, note = 146, "Hebrew 147 is split into Greek 146 and 147"
+        else:
+            greek, note = hebrew, "the numbering meets again at 148"
+        rows.append((book_id, "kjv", hebrew, "lxx", greek, note))
+        rows.append((book_id, "lxx", greek, "kjv", hebrew, note))
+
+    conn.executemany(
+        "INSERT INTO versification_map (book_id, from_scheme, from_chapter, to_scheme, "
+        "to_chapter, note) VALUES (?, ?, ?, ?, ?, ?) "
+        "ON CONFLICT (book_id, from_scheme, from_chapter, to_scheme) DO UPDATE SET "
+        "to_chapter=excluded.to_chapter, note=excluded.note",
+        rows,
+    )
+    return len(rows)
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--db", default=str(DEFAULT_DB), help="path to the SQLite database")
@@ -125,11 +168,13 @@ def main():
         count = upsert_sources(conn, load_registry())
         books = upsert_canon(conn)
         dates = upsert_composition_dates(conn)
+        mapped = upsert_versification(conn)
         conn.commit()
     finally:
         conn.close()
 
-    print(f"Initialised {db_path} with {count} sources, {books} books, {dates} date ranges.")
+    print(f"Initialised {db_path} with {count} sources, {books} books, {dates} date ranges, "
+          f"{mapped} versification mappings.")
 
 
 if __name__ == "__main__":
