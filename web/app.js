@@ -613,6 +613,7 @@ function renderSources() {
           <li>${s.url ? `<a href="${esc(s.url)}">${esc(s.name)}</a>` : esc(s.name)}
             — ${esc(s.license)}${s.attribution ? ` · ${esc(s.attribution)}` : ''}
             ${s.tradition ? `<span class="src-tr">${esc(s.tradition)}</span>` : ''}
+            ${s.caveat ? `<span class="src-caveat">${esc(s.caveat)}</span>` : ''}
             ${s.verified === 'unverified'
               ? '<span class="badge">licence unconfirmed</span>' : ''}</li>`).join('')}</ul></li>`)
     .join('');

@@ -345,3 +345,4 @@ a { color: var(--accent); }
 .cov { margin-right: .6rem; white-space: nowrap; }
 .cov b { color: var(--fg); font-weight: 600; }
 .cov-note { display: block; margin-top: .3rem; font-style: italic; }
+.src-caveat { display: block; color: var(--accent); font-size: .78rem; }

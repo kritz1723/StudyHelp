@@ -23,7 +23,7 @@ DEFAULT_DB = ROOT / "data" / "studyhelp.db"
 SOURCE_FIELDS = [
     "id", "name", "kind", "language", "year", "era", "description", "license",
     "attribution", "homepage", "repository", "formats", "tier", "priority",
-    "verified", "witness", "tradition", "notes",
+    "verified", "witness", "tradition", "caveat", "notes",
 ]
 
 

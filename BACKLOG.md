@@ -32,9 +32,9 @@ recorded here rather than dropped, so the trade-off stays visible.
 - [ ] **Resolve the SBLGNT EULA question.** The MorphGNT *tagging* is CC-BY-SA, but the
       SBLGNT *base text* is under its own EULA. Confirm what redistribution is permitted
       before shipping the Greek text itself. The tagging is separable if it is not.
-- [ ] **KJV UK Crown copyright.** Public domain in most of the world; Crown letters
+- [x] **KJV UK Crown copyright.** Public domain in most of the world; Crown letters
       patent still apply in the UK. Decide whether to geo-restrict or accept the risk.
-- [ ] **Licensed modern translations (NIV, ESV, NASB, CSB).** Best practice would be to
+- [x] **Licensed modern translations (NIV, ESV, NASB, CSB).** Best practice would be to
       include them for the modern end of the drift timeline. Deferred: they need paid or
       permissioned API access. The Berean Standard Bible (public domain, 2023) covers the
       modern slot in the meantime. **Never scrape them.**
@@ -43,7 +43,7 @@ recorded here rather than dropped, so the trade-off stays visible.
 - [x] **Attribution surface.** Every licence here (CC-BY, CC-BY-SA) requires visible
       credit. Build a single attributions page generated from the registry, not
       hand-maintained.
-- [ ] **CC-BY-SA share-alike propagation.** Some sources (MorphGNT tagging, unfoldingWord,
+- [x] **CC-BY-SA share-alike propagation.** Some sources (MorphGNT tagging, unfoldingWord,
       Perseus LSJ) are share-alike. Determine what that obliges for derived data we
       publish, and whether to segregate SA-derived tables from permissive ones.
 
@@ -90,7 +90,7 @@ recorded here rather than dropped, so the trade-off stays visible.
       Hebrew-side alignment, not from a lemma-tagged LXX, so the Swete text loaded here
       still cannot be searched by word. Tagging it with an open analyser remains the route
       to that, and is now a smaller prize than it was.
-- [ ] Previously recorded, still true — **the tagged Septuagint editions are blocked:** This is the most consequential
+- [x] Previously recorded, still true — **the tagged Septuagint editions are blocked:** This is the most consequential
       open problem in the project. The chain Hebrew→LXX→Greek NT needs the LXX *tagged by
       lemma*, and the three available routes each fail:
       - **Rahlfs via CATSS/CCAT** has the morphology and Strong's tags, but is
@@ -112,7 +112,7 @@ recorded here rather than dropped, so the trade-off stays visible.
 - [x] **The `gloss` table is populated.** 386,092 per-word glosses from MACULA, in
       English (Berean Interlinear and Cherith) and Mandarin (Cherith). A word's page now
       shows what it actually became, and how often.
-- [ ] **Extend alignment to the full translations.** Glosses currently cover the Greek
+- [x] **Extend alignment to the full translations.** Glosses currently cover the Greek
       New Testament only. The Hebrew side needs MACULA Hebrew, and the historical English
       versions (Wycliffe, Tyndale, KJV) have no word-level alignment at all — so the drift
       view cannot yet run across centuries, only across present-day glosses.
@@ -121,7 +121,7 @@ recorded here rather than dropped, so the trade-off stays visible.
       9,291 senses loaded. Hebrew words now show two dictionaries side by side, and where
       they differ the difference is left standing. This is the first time the app can do
       the thing it exists for.
-- [ ] **Semantic domains are permission-only — checked, and the answer is no.** Louw-Nida
+- [x] **Semantic domains are permission-only — checked, and the answer is no.** Louw-Nida
       (via UBS MARBLE) for Greek and the Semantic Dictionary of Biblical Hebrew are both
       marked "used with permission" inside MACULA rather than CC BY. Clear Bible holds
       that permission; we do not inherit it. Seeking permission from the United Bible
@@ -187,7 +187,7 @@ recorded here rather than dropped, so the trade-off stays visible.
       collapsed to six books; renderings are proportional bars instead of equal chips;
       settings are tucked behind a control; results are marked by language; the landing
       page offers six starting points.
-- [ ] **Historical drift is still missing, and the obvious source does not have it.** The
+- [x] **Historical drift is still missing, and the obvious source does not have it.** The
       scrollmapper KJV is titled "with Strongs Numbers and Morphology" but both its JSON
       and SQLite exports carry plain text only. Tracing a word across centuries needs a
       genuinely aligned historical version; without one, drift can be shown across
@@ -261,3 +261,66 @@ recorded here rather than dropped, so the trade-off stays visible.
   Greek text moves to Nestle 1904 the MorphGNT dependency goes with it, and the question
   largely dissolves. Until then, derived data built from that tagging inherits the
   obligation, and the registry marks which sources carry it.
+
+
+## Closed as decisions, not as work
+
+These will not be actioned, and saying so is better than leaving them open for
+someone to rediscover.
+
+- **KJV Crown copyright — disclosed, not geo-restricted.** The text is public domain
+  almost everywhere; within the UK the rights sit with the Crown under letters patent.
+  Geo-restricting a study tool over a 1769 text would be worse for readers than saying
+  so plainly, so the constraint travels with the version wherever it is credited, and
+  is stated in LICENSE-DATA.md.
+- **Licensed modern translations — will not pursue.** NIV, ESV, NASB and CSB need paid
+  or permissioned access. The Berean Standard Bible, public domain since 2023, holds
+  the modern slot. They are never to be scraped.
+- **Share-alike propagation — resolved by declaring it.** The Greek morphological
+  tagging is CC BY-SA 3.0, and share-alike propagates, so the data this site publishes
+  is released under CC BY-SA 4.0 and says so in the footer and in LICENSE-DATA.md. The
+  obligation was always there; it is now discharged rather than implicit.
+- **Semantic domains — asked, rather than taken.** `docs/ubs-permission-request.md`
+  drafts a request to the United Bible Societies for the MARBLE and SDBH data. It is a
+  draft for a person to send; nothing depends on a reply, and the open alternatives
+  (Brown-Driver-Briggs for Hebrew, Abbott-Smith for Greek) already give every word a
+  second opinion.
+- **Word-by-word drift across centuries — not possible with what exists.** Four sources
+  checked, none carries a Strong's-tagged historical English translation: scrollmapper's
+  KJV in both its JSON and SQLite exports, the open-bibles OSIS edition, and STEPBible,
+  which tags only the copyrighted ESV. Verse-level drift across traditions is built and
+  is most of the value. Revisit only if such a dataset appears.
+- **The tagged Septuagint editions stay blocked**, and the need for them has largely
+  gone: the Hebrew-side bridge supplies the chain, and form-matching makes the Greek
+  searchable. What remains unavailable is a true morphological analysis, which would
+  turn 84.3% inference into certainty.
+
+## The one thing still genuinely open
+
+**Which Greek text underlies the New Testament.** The SBLGNT base text sits under an
+EULA that could not be read from this environment, while its MorphGNT tagging is
+CC BY-SA. Swapping to **Nestle 1904** (public domain by age, published in MACULA under
+CC BY 4.0) would remove both the unread EULA and the share-alike obligation.
+
+It was evaluated rather than assumed, and it has a cost that was not visible when it
+was first recommended: the Nestle 1904 dataset carries **no Cherith glosses at all** —
+0% English, 0% Mandarin, against 96.6% and 84.6% for the SBLGNT edition. Switching
+would delete the Mandarin glosses outright, and with them the clearest demonstration
+the project has that English collapses a word where another language does not.
+
+So the choice is a real trade, not an oversight:
+
+| | Keep SBLGNT | Switch to Nestle 1904 |
+| --- | --- | --- |
+| Base-text licence | EULA, unread | Public domain |
+| Tagging licence | CC BY-SA 3.0 | CC BY 4.0 |
+| English glosses | 96.6% | Berean only |
+| Mandarin glosses | 84.6% | none |
+
+A third option exists and was not attempted: keep Nestle 1904 as the text and re-key
+the Cherith glosses onto it by reference and word form. The texts agree closely enough
+that coverage would be high, but it would add another inference layer to sidestep a
+licence nobody here could read, which is a poor reason to introduce one.
+
+Recommendation: read the EULA from an unblocked network first. It very likely permits
+this use, in which case nothing needs to change and the cost above is avoided entirely.

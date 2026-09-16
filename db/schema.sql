@@ -34,6 +34,9 @@ CREATE TABLE IF NOT EXISTS source (
     -- Which reading community a version speaks for. Two translations differing
     -- is only a perspective if you know whose perspective each one is.
     tradition     TEXT,
+    -- A constraint a reader should see wherever the source is credited, such as
+    -- the KJV's Crown copyright within the UK.
+    caveat        TEXT,
     notes         TEXT
 );
 
