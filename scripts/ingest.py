@@ -428,6 +428,7 @@ class Ingestor:
 
         last_index = max(words) if words else 0
         rows = []
+        verse_words = []
         skipped = set()
         for position, (start, ref) in enumerate(starts):
             end = starts[position + 1][0] - 1 if position + 1 < len(starts) else last_index
@@ -449,6 +450,7 @@ class Ingestor:
             vid = self.verse_id(books[name], int(chapter_text), int(verse_text),
                                 versification="lxx")
             rows.append((vid, version_id, text, source_id))
+            verse_words.append((vid, [words[i] for i in range(start, end + 1) if i in words]))
 
         self.conn.executemany(
             "INSERT INTO rendering (verse_id, version_id, text, source_id) "
@@ -456,9 +458,56 @@ class Ingestor:
             "text=excluded.text",
             rows,
         )
+        self._tag_lxx_words(verse_words, source_id)
         print(f"  lxx: {len(rows)} verses"
               f"{f', skipped {len(skipped)} non-canonical books' if skipped else ''}")
 
+
+    def _tag_lxx_words(self, verse_words, source_id):
+        """Give Septuagint words a lemma by matching their form, not by analysing them.
+
+        No freely licensed morphological tagging of the Septuagint exists: the
+        edition that has it is NonCommercial over a text requiring a signed
+        declaration. What can be done openly is to match each Septuagint word
+        form against the forms the Greek New Testament attests, which covers most
+        of the vocabulary because the two share it.
+
+        This is a good guess, not an analysis. Every token written here is marked
+        inferred, is counted separately from tagged text, and is labelled as such
+        wherever it is shown. A form that belongs to two lemmas will sometimes be
+        given the wrong one, and no amount of coverage makes that untrue.
+        """
+        forms = {}
+        for surface, lemma_id in self.conn.execute(
+            "SELECT surface, lemma_id FROM token "
+            "WHERE source_id = 'morphgnt-sblgnt' AND lemma_id IS NOT NULL"
+        ):
+            forms.setdefault(word_key(surface), lemma_id)
+        for lemma_id, lemma in self.conn.execute(
+            "SELECT id, lemma FROM lemma WHERE language = 'grc'"
+        ):
+            forms.setdefault(word_key(lemma), lemma_id)
+
+        rows = []
+        matched = total = 0
+        for verse_id, surfaces in verse_words:
+            for position, surface in enumerate(surfaces, start=1):
+                key = word_key(surface)
+                if not key:
+                    continue
+                total += 1
+                lemma_id = forms.get(key)
+                if lemma_id is not None:
+                    matched += 1
+                rows.append((verse_id, position, surface, lemma_id, source_id))
+
+        self.conn.executemany(
+            "INSERT INTO token (verse_id, position, surface, lemma_id, inferred, source_id) "
+            "VALUES (?, ?, ?, ?, 1, ?) ON CONFLICT DO NOTHING",
+            rows,
+        )
+        rate = (matched / total * 100) if total else 0
+        print(f"  lxx words: {total} tokens, {matched} given an inferred lemma ({rate:.1f}%)")
 
     def ingest_macula(self):
         """Enrich the Greek New Testament with MACULA's word-level annotation.

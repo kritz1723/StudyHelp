@@ -339,3 +339,9 @@ a { color: var(--accent); }
 /* ---- stated gaps --------------------------------------------------------- */
 .gaps { margin: .4rem 0 0; padding-left: 1.1rem; color: var(--muted); font-size: .9rem; }
 .gaps li { margin-bottom: .3rem; }
+
+/* ---- language coverage --------------------------------------------------- */
+.coverage { font-size: .78rem; color: var(--muted); }
+.cov { margin-right: .6rem; white-space: nowrap; }
+.cov b { color: var(--fg); font-weight: 600; }
+.cov-note { display: block; margin-top: .3rem; font-style: italic; }

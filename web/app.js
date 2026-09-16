@@ -7,11 +7,14 @@ const el = (id) => document.getElementById(id);
 const els = {
   q: el('q'), hint: el('hint'), settings: el('settings'),
   sort: el('sort'), tradition: el('tradition'), canon: el('canon'), version: el('version'),
+  uilang: el('uilang'), coverage: el('coverage'),
   results: el('results'), detail: el('detail'), reader: el('reader'),
   welcome: el('welcome'), featured: el('featured'), sources: el('sources'), stats: el('stats'),
 };
 
 let INDEX = [], SOURCES = {}, VERSIONS = [], CANONS = {}, CANON_BOOKS = [];
+// Gloss text is fetched on the first search by meaning rather than on arrival.
+let TERMS = null, termsPromise = null;
 let lastMatches = [];
 
 const LANG = { hbo: 'Hebrew', arc: 'Aramaic', grc: 'Greek', en: 'English', la: 'Latin', zh: 'Mandarin' };
@@ -41,6 +44,23 @@ function esc(v) {
     (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 }
 function fold(t) { return (t || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase(); }
+
+// Early modern English spelling is unsettled: Tyndale writes "synne", Wycliffe
+// "schalt". Folding the common conventions — u for v, sch for sh, y for i,
+// doubled letters, silent final e — lets someone who types the older spelling
+// still find the word. It does not catch vowel variation such as euell for
+// evil, and deliberately so: a fold loose enough to join those would join
+// plenty of genuinely different words too.
+function foldHistoric(text) {
+  return fold(text)
+    .replace(/[^a-z\s]/g, '')
+    .replace(/\bv/g, 'u').replace(/([aeiou])u([aeiou])/g, '$1v$2')
+    .replace(/sch/g, 'sh')
+    .replace(/([a-z])y([a-z])/g, '$1i$2')
+    .replace(/ie\b/g, 'y')
+    .replace(/(.)\1/g, '$1')
+    .replace(/e\b/g, '');
+}
 
 // -- appearance ------------------------------------------------------------
 
@@ -101,6 +121,23 @@ async function boot() {
     els.tradition.value = store.get('tradition', 'traditional');
     els.canon.value = store.get('canon', 'protestant');
 
+    // Interface language and translation language are separate settings. Only
+    // English exists for the interface today, and saying so is better than
+    // implying a choice that is not there.
+    els.uilang.value = store.get('uilang', 'en');
+    els.uilang.disabled = els.uilang.options.length < 2;
+
+    // What actually exists per language, rather than an implied parity.
+    const byLanguage = {};
+    for (const v of VERSIONS) {
+      (byLanguage[v.language] = byLanguage[v.language] || []).push(v);
+    }
+    els.coverage.innerHTML = Object.entries(byLanguage)
+      .sort((a, b) => b[1].length - a[1].length)
+      .map(([lang, list]) => `<span class="cov"><b>${esc(LANG[lang] || lang)}</b> ${list.length}</span>`)
+      .join(' ') + ` <span class="cov-note">Coverage is uneven: these are the languages open
+        licensing actually reaches, not a shortlist.</span>`;
+
     renderSources();
     renderFeatured();
     if (stats) {
@@ -142,13 +179,28 @@ function search(query) {
     let score = null;
     if (e.strongs && e.strongs === strongs) score = 0;
     else if (fold(e.xlit) === q || fold(e.lemma) === q) score = 1;
+    // A word whose usual English rendering IS the query beats one that merely
+    // lists it among every rendering a translator ever chose.
+    else if (fold(e.top) === q) score = 1.5;
     else if (fold(e.xlit).startsWith(q)) score = 2;
     else if (new RegExp(`\\b${q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`).test(e._key)) score = 3;
     else if (e._key.includes(q)) score = 4;
     if (score !== null) scored.push([score, -e.n, e]);
   }
   scored.sort((a, b) => a[0] - b[0] || a[1] - b[1]);
-  return scored.slice(0, 80).map((r) => r[2]);
+  if (scored.length) return scored.slice(0, 80).map((r) => r[2]);
+
+  // Nothing matched as written. Try again treating the query as early modern
+  // spelling, so "synne" reaches the word a modern reader would type as "sin".
+  const historic = foldHistoric(query);
+  if (!historic) return [];
+  const fallback = [];
+  for (const e of INDEX) {
+    if (e._historic === undefined) e._historic = foldHistoric(e._key);
+    if (e._historic.split(/\s+/).some((w) => w && w === historic)) fallback.push(e);
+  }
+  fallback.sort((a, b) => b.n - a.n);
+  return fallback.slice(0, 40);
 }
 
 function applySort(matches) {
@@ -373,6 +425,7 @@ async function showLemma(slug) {
   const englishCount = ((data.renderings || {})['cherith-en'] || []).reduce((n, [, c]) => n + c, 0);
   const layerData = [
     [data.lang === 'grc' ? 'Greek New Testament' : 'Hebrew Bible', data.count],
+    ['Standing in the Septuagint', data.lxx_count || 0],
     ['Followed into the Septuagint', lxxCount],
     ['Glossed in English', englishCount],
   ].filter(([, n]) => n > 0);
@@ -415,7 +468,11 @@ async function showLemma(slug) {
     ${chain}
 
     ${layers ? `<h3>How far it reaches</h3><div class="layers">${layers}</div>
-      <p class="note">The same word counted at each stage it passes through.</p>` : ''}
+      <p class="note">The same word counted at each stage it passes through.
+         ${data.lxx_count ? `The Septuagint figure is a weaker kind of evidence: those words
+           were matched by their form against forms the New Testament attests, not read from
+           a morphological analysis, because no freely licensed analysis of the Septuagint
+           exists. Treat it as a strong indication, not a count.` : ''}</p>` : ''}
 
     <h3>Where it first appears</h3>
     ${first ? `
@@ -429,6 +486,15 @@ async function showLemma(slug) {
         <p class="note">Attested by ${esc(said(first.source))}.
           <button class="more" data-read="${esc(first.book)}|${first.chapter}|${first.verse}">Read the verse →</button></p>
       </div>` : '<p class="hint">Known to a dictionary, but with no tagged occurrence in the text.</p>'}
+
+    ${(data.lxx_books || []).length ? `
+      <h3>Where it stands in the Septuagint</h3>
+      <div class="chips">${data.lxx_books.map(([book, count]) => `
+        <span class="chip"><span class="w">${esc(book)}</span>
+          <span class="c">${count}</span></span>`).join('')}</div>
+      <p class="note">Matched by word form, so a form belonging to two words will sometimes
+         be counted under the wrong one. This is also how the deuterocanonical books become
+         searchable at all — they have no other tagged text.</p>` : ''}
 
     ${distribution.length ? `
       <h3>Where it gathers</h3>
@@ -569,6 +635,20 @@ function routeFromHash() {
   showLemma(raw).catch(() => { location.hash = ''; });
 }
 
+function loadTerms() {
+  if (TERMS) return Promise.resolve(TERMS);
+  if (!termsPromise) {
+    termsPromise = fetch('terms.json').then((r) => r.json()).then((data) => {
+      TERMS = data;
+      INDEX.forEach((e) => {
+        if (data[e.slug]) e._key += ' ' + fold(data[e.slug]);
+      });
+      return data;
+    }).catch(() => ({}));
+  }
+  return termsPromise;
+}
+
 let timer;
 els.q.addEventListener('input', () => {
   clearTimeout(timer);
@@ -581,7 +661,8 @@ els.q.addEventListener('input', () => {
       location.hash = `${ref.book.name.replace(/ /g, '_')}.${ref.chapter}${ref.verse ? `.${ref.verse}` : ''}`;
       return;
     }
-    renderResults(search(value), value);
+    // A search by meaning needs the gloss text, which is loaded on demand.
+    loadTerms().then(() => renderResults(search(value), value));
   }, 140);
 });
 

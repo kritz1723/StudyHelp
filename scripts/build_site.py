@@ -50,14 +50,24 @@ def build(conn, out_dir):
     # query per lemma -- 14k round trips is the difference between a 2-second
     # build and a 5-minute one.
     counts = dict(
-        conn.execute("SELECT lemma_id, COUNT(*) FROM token WHERE lemma_id IS NOT NULL GROUP BY lemma_id")
+        conn.execute("SELECT lemma_id, COUNT(*) FROM token "
+                     "WHERE lemma_id IS NOT NULL AND inferred = 0 GROUP BY lemma_id")
+    )
+
+    # Septuagint words carry an inferred lemma, matched by form rather than
+    # analysed. Counting them beside tagged text would quietly double a word's
+    # attestation on the strength of a guess, so they are kept apart and
+    # labelled wherever they appear.
+    lxx_counts = dict(
+        conn.execute("SELECT lemma_id, COUNT(*) FROM token "
+                     "WHERE lemma_id IS NOT NULL AND inferred = 1 GROUP BY lemma_id")
     )
 
     first_ref = {}
     for lemma_id, book, chapter, verse, surface, token_source in conn.execute(
         "SELECT t.lemma_id, b.name, v.chapter, v.verse, t.surface, t.source_id FROM token t "
         "JOIN verse v ON v.id = t.verse_id JOIN book b ON b.id = v.book_id "
-        "WHERE t.lemma_id IS NOT NULL "
+        "WHERE t.lemma_id IS NOT NULL AND t.inferred = 0 "
         "ORDER BY t.lemma_id, b.id DESC, v.chapter DESC, v.verse DESC, t.position DESC"
     ):
         # Descending order means the last row written per lemma is the earliest.
@@ -74,7 +84,8 @@ def build(conn, out_dir):
     for lemma_id, book, count in conn.execute(
         "SELECT t.lemma_id, b.name, COUNT(*) FROM token t "
         "JOIN verse v ON v.id = t.verse_id JOIN book b ON b.id = v.book_id "
-        "WHERE t.lemma_id IS NOT NULL GROUP BY t.lemma_id, b.id ORDER BY t.lemma_id, b.id"
+        "WHERE t.lemma_id IS NOT NULL AND t.inferred = 0 "
+        "GROUP BY t.lemma_id, b.id ORDER BY t.lemma_id, b.id"
     ):
         distribution.setdefault(lemma_id, []).append([book, count])
         genre = genres.get(book) or "other"
@@ -115,8 +126,9 @@ def build(conn, out_dir):
     # discover: LXX chapter and verse numbering genuinely differs from the Hebrew
     # and English, most visibly in the Psalms.
     cautions = {
-        "lxx-swete": ("Septuagint numbering differs from the Hebrew and English in places, "
-                      "the Psalms especially, so this verse may not correspond exactly."),
+        "lxx-swete": ("Septuagint numbering differs from the Hebrew and English in places. "
+                      "Where the mapping is known it is applied; elsewhere this verse may "
+                      "not correspond exactly."),
     }
     versions = [
         {"id": vid, "name": name, "language": language, "year": year, "era": era,
@@ -134,13 +146,22 @@ def build(conn, out_dir):
     for lemma_id, version_id, text, count in conn.execute(
         "SELECT t.lemma_id, g.version_id, g.text, COUNT(*) c FROM gloss g "
         "JOIN token t ON t.id = g.token_id WHERE t.lemma_id IS NOT NULL "
-        "AND g.version_id NOT LIKE 'interlinear-%' "
+        "AND t.inferred = 0 AND g.version_id NOT LIKE 'interlinear-%' "
         "GROUP BY t.lemma_id, g.version_id, g.text ORDER BY t.lemma_id, g.version_id, c DESC"
     ):
         renderings_by_lemma.setdefault(lemma_id, {}).setdefault(version_id, []).append([text, count])
 
     # Senses are grouped by the authority that gives them. Two authorities saying
     # different things is the point, so they are never merged into one list.
+    lxx_books = {}
+    for lemma_id, book, count in conn.execute(
+        "SELECT t.lemma_id, b.name, COUNT(*) c FROM token t "
+        "JOIN verse v ON v.id = t.verse_id JOIN book b ON b.id = v.book_id "
+        "WHERE t.lemma_id IS NOT NULL AND t.inferred = 1 "
+        "GROUP BY t.lemma_id, b.id ORDER BY t.lemma_id, c DESC"
+    ):
+        lxx_books.setdefault(lemma_id, []).append([book, count])
+
     senses = {}
     for lemma_id, gloss, definition, source_id, attested in conn.execute(
         "SELECT lemma_id, gloss, definition, source_id, attested FROM sense "
@@ -155,7 +176,7 @@ def build(conn, out_dir):
     to_greek, from_hebrew = {}, {}
     for lemma_id, greek_text, count in conn.execute(
         "SELECT t.lemma_id, e.greek_text, COUNT(*) c FROM lxx_equivalent e "
-        "JOIN token t ON t.id = e.token_id WHERE t.lemma_id IS NOT NULL "
+        "JOIN token t ON t.id = e.token_id WHERE t.lemma_id IS NOT NULL AND t.inferred = 0 "
         "GROUP BY t.lemma_id, e.greek_text ORDER BY t.lemma_id, c DESC"
     ):
         to_greek.setdefault(lemma_id, []).append([greek_text, count])
@@ -196,6 +217,7 @@ def build(conn, out_dir):
         lemma_text[lemma_id] = lemma
         lemma_xlit[lemma_id] = xlit
 
+    lemma_by_slug = {}
     index = []
     written = 0
     for lemma_id, lemma, xlit, strongs, language, source_id in conn.execute(
@@ -203,6 +225,7 @@ def build(conn, out_dir):
     ):
         count = counts.get(lemma_id, 0)
         slug = strongs or f"L{lemma_id}"
+        lemma_by_slug[slug] = lemma_id
 
         first = first_ref.get(lemma_id)
         book_dates = dates.get(first["book"]) if first else None
@@ -219,12 +242,16 @@ def build(conn, out_dir):
             # The first gloss doubles as the English search target: users arrive
             # with an English word, not a Strong's number.
             "gloss": (first_gloss(senses.get(lemma_id)) or "")[:120],
+            # The word this one is most often actually rendered as. A dictionary
+            # listing every English word a translator ever reached for makes a
+            # poor ranking signal; what the word usually becomes is a good one.
+            "top": ((renderings_by_lemma.get(lemma_id, {}).get("cherith-en")
+                     or renderings_by_lemma.get(lemma_id, {}).get("berean-interlinear")
+                     or [[""]])[0][0])[:40],
             # Every recorded meaning is searchable, not just the first. A reader
             # arriving with "propitiation" must reach the words behind it, and
             # that term appears in a later sense than the headline gloss.
-            "terms": " ".join(
-                x["gloss"] for group in senses.get(lemma_id, {}).values() for x in group
-            )[:220],
+
             # Sort keys for "earliest first appearance". A range cannot be sorted
             # directly, so the declared rule is: sort by the EARLIEST bound of the
             # selected tradition. The rule is stated in the UI rather than hidden.
@@ -246,6 +273,8 @@ def build(conn, out_dir):
             "by_genre": sorted(by_genre.get(lemma_id, {}).items(), key=lambda kv: -kv[1]),
             "earliest_written": earliest_written.get(lemma_id, {}),
             "hapax": count == 1,
+            "lxx_count": lxx_counts.get(lemma_id, 0),
+            "lxx_books": lxx_books.get(lemma_id, [])[:8],
             "compare_with": [
                 {"slug": lemma_slug_for.get(other), "lemma": lemma_text.get(other),
                  "xlit": lemma_xlit.get(other), "n": counts.get(other, 0)}
@@ -263,6 +292,19 @@ def build(conn, out_dir):
             json.dumps(detail, ensure_ascii=False, separators=(",", ":")), encoding="utf-8"
         )
         written += 1
+
+    # The searchable gloss text is most of the index by weight and is only needed
+    # once someone searches by meaning, so it ships separately and is fetched on
+    # the first such search rather than by every visitor on arrival.
+    terms = {
+        entry["slug"]: " ".join(
+            x["gloss"] for group in senses.get(lemma_by_slug[entry["slug"]], {}).values()
+            for x in group
+        )[:220]
+        for entry in index if entry["slug"] in lemma_by_slug
+    }
+    (out_dir / "terms.json").write_text(
+        json.dumps(terms, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
 
     (out_dir / "index.json").write_text(
         json.dumps({"lemmas": index, "sources": sources, "versions": versions},
@@ -341,12 +383,27 @@ def build(conn, out_dir):
         ):
             word_gloss[(book, chapter, verse, position)] = text
 
-    text_by_chapter = {}
-    for book, chapter, verse, version_id, text in conn.execute(
-        "SELECT b.name, v.chapter, v.verse, r.version_id, r.text FROM rendering r "
-        "JOIN verse v ON v.id = r.verse_id JOIN book b ON b.id = v.book_id"
+    to_lxx = {}
+    for book, from_chapter, to_chapter in conn.execute(
+        "SELECT b.name, m.from_chapter, m.to_chapter FROM versification_map m "
+        "JOIN book b ON b.id = m.book_id WHERE m.from_scheme = 'kjv' AND m.to_scheme = 'lxx'"
     ):
-        text_by_chapter.setdefault((book, chapter), {}).setdefault(verse, {})[version_id] = text
+        to_lxx[(book, from_chapter)] = to_chapter
+
+    text_by_chapter = {}
+    for book, chapter, verse, version_id, text, scheme in conn.execute(
+        "SELECT b.name, v.chapter, v.verse, r.version_id, r.text, v.versification "
+        "FROM rendering r JOIN verse v ON v.id = r.verse_id JOIN book b ON b.id = v.book_id"
+    ):
+        key = (book, chapter)
+        if scheme == "lxx":
+            # File the Septuagint under the chapter an English reader will ask
+            # for, not the one it numbers itself, so Psalm 51 shows the psalm
+            # the reader means rather than the one that shares its number.
+            english = {v: k for k, v in to_lxx.items() if k[0] == book}.get(chapter)
+            if english:
+                key = english
+        text_by_chapter.setdefault(key, {}).setdefault(verse, {})[version_id] = text
 
     chapters_written = 0
     for key in sorted(set(words_by_verse) | set(text_by_chapter)):
@@ -377,6 +434,15 @@ def build(conn, out_dir):
             "SELECT name, abbr, chapters, testament, genre FROM book ORDER BY id"
         )
     ]
+    mapping = {}
+    for book, from_scheme, from_chapter, to_scheme, to_chapter, note in conn.execute(
+        "SELECT b.name, m.from_scheme, m.from_chapter, m.to_scheme, m.to_chapter, m.note "
+        "FROM versification_map m JOIN book b ON b.id = m.book_id"
+    ):
+        mapping.setdefault(f"{book}|{from_scheme}|{to_scheme}", {})[from_chapter] = [to_chapter, note]
+    (out_dir / "versification.json").write_text(
+        json.dumps(mapping, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
+
     (out_dir / "books.json").write_text(
         json.dumps({"books": books, "genres": dict(conn.execute(
             "SELECT DISTINCT genre, genre FROM book WHERE genre IS NOT NULL"))},
@@ -397,6 +463,8 @@ def build(conn, out_dir):
         "canons": {name: len(books) for name, books in canons.items()},
         "glosses": conn.execute("SELECT COUNT(*) FROM gloss").fetchone()[0],
         "septuagint_links": conn.execute("SELECT COUNT(*) FROM lxx_equivalent").fetchone()[0],
+        "septuagint_words": conn.execute(
+            "SELECT COUNT(*) FROM token WHERE inferred = 1").fetchone()[0],
         "chapters": chapters_written,
     }
     (out_dir / "stats.json").write_text(json.dumps(stats), encoding="utf-8")

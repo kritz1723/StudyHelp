@@ -160,6 +160,11 @@ CREATE TABLE IF NOT EXISTS token (
     surface    TEXT NOT NULL,        -- inflected form as it stands in the text
     lemma_id   INTEGER REFERENCES lemma(id),
     morphology TEXT,                 -- parsing code, as given by the tagging source
+    -- 1 where the lemma was inferred by matching the word form against forms
+    -- attested elsewhere, rather than read from a morphological analysis. An
+    -- inferred link is a good guess, not a tagging, and must never be counted
+    -- alongside one without saying so.
+    inferred   INTEGER NOT NULL DEFAULT 0,
     source_id  TEXT NOT NULL REFERENCES source(id),
     UNIQUE (verse_id, position, source_id)
 );
@@ -197,6 +202,20 @@ CREATE TABLE IF NOT EXISTS gloss (
 );
 
 CREATE INDEX IF NOT EXISTS idx_gloss_version ON gloss(version_id);
+
+-- Chapter numbering diverges between traditions, most visibly in the Psalms,
+-- where the Septuagint merges and splits psalms relative to the Hebrew. Without
+-- this, comparing "Psalm 23" across versions silently compares two different
+-- psalms.
+CREATE TABLE IF NOT EXISTS versification_map (
+    book_id      INTEGER NOT NULL REFERENCES book(id),
+    from_scheme  TEXT NOT NULL,
+    from_chapter INTEGER NOT NULL,
+    to_scheme    TEXT NOT NULL,
+    to_chapter   INTEGER NOT NULL,
+    note         TEXT,
+    PRIMARY KEY (book_id, from_scheme, from_chapter, to_scheme)
+);
 
 -- How the Septuagint rendered a given Hebrew word: the hinge of the transmission
 -- chain Hebrew -> Greek OT -> Greek NT -> English. Without this, a reader can see

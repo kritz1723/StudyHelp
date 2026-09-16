@@ -407,15 +407,18 @@ class IngestedCorpusTests(unittest.TestCase):
         ).fetchone()
         if not row:
             self.skipTest(f"{strongs} not loaded")
+        # inferred = 0 restricts this to tagged text. Septuagint words carry a
+        # lemma matched by form rather than analysed, and counting them here
+        # would inflate a word's attestation on the strength of a guess.
         return self.conn.execute(
-            "SELECT COUNT(*) FROM token WHERE lemma_id = ?", (row[0],)
+            "SELECT COUNT(*) FROM token WHERE lemma_id = ? AND inferred = 0", (row[0],)
         ).fetchone()[0]
 
     def first_reference(self, strongs):
         row = self.conn.execute(
             "SELECT b.name, v.chapter, v.verse FROM token t "
             "JOIN verse v ON v.id = t.verse_id JOIN book b ON b.id = v.book_id "
-            "JOIN lemma l ON l.id = t.lemma_id WHERE l.strongs = ? "
+            "JOIN lemma l ON l.id = t.lemma_id WHERE l.strongs = ? AND t.inferred = 0 "
             "ORDER BY b.id, v.chapter, v.verse, t.position LIMIT 1",
             (strongs,),
         ).fetchone()
@@ -434,9 +437,39 @@ class IngestedCorpusTests(unittest.TestCase):
         # brittle about edition differences.
         self.assertTrue(110 <= self.occurrences("G26") <= 120, self.occurrences("G26"))
 
+    def test_inferred_words_never_join_the_tagged_counts(self):
+        """The invariant that keeps a guess from being read as evidence.
+
+        Septuagint words are matched by form, not analysed. When the test helpers
+        forgot this, agape's first appearance moved from Matthew 24:12 to a
+        Septuagint occurrence in 2 Samuel — a plausible, interesting, and
+        differently-sourced claim presented as the same kind of fact.
+        """
+        inferred = self.conn.execute(
+            "SELECT COUNT(*) FROM token WHERE inferred = 1"
+        ).fetchone()[0]
+        if not inferred:
+            self.skipTest("Septuagint words not ingested")
+        self.assertGreater(inferred, 400_000)
+
+        every = self.conn.execute(
+            "SELECT COUNT(*) FROM token WHERE lemma_id IS NOT NULL"
+        ).fetchone()[0]
+        tagged = self.conn.execute(
+            "SELECT COUNT(*) FROM token WHERE lemma_id IS NOT NULL AND inferred = 0"
+        ).fetchone()[0]
+        self.assertLess(tagged, every, "inferred tokens are not distinguishable")
+
+        site = ROOT / "site" / "lemma" / "G26.json"
+        if site.exists():
+            data = json.loads(site.read_text())
+            self.assertTrue(110 <= data["count"] <= 120, data["count"])
+            self.assertGreater(data.get("lxx_count", 0), 0)
+            self.assertEqual(data["first"]["ref"], "Matthew 24:12")
+
     def test_greek_corpus_size(self):
         count = self.conn.execute(
-            "SELECT COUNT(*) FROM token WHERE source_id = 'morphgnt-sblgnt'"
+            "SELECT COUNT(*) FROM token WHERE source_id = 'morphgnt-sblgnt' AND inferred = 0"
         ).fetchone()[0]
         if not count:
             self.skipTest("morphgnt not ingested")
